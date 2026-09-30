@@ -2,56 +2,58 @@ import io
 import requests
 import streamlit as st
 import pandas as pd
-import csv
 
 # =====================================================================
-# CONFIGURACIÓN CLOUD: RUTA ESTÁTICA DIRECTA A TU GOOGLE DRIVE
+# CONFIGURACIÓN CLOUD: EXTRACCIÓN ROBUSTA Y SINCRONIZADA DE GOOGLE DRIVE
 # =====================================================================
 URL_DESCARGA_DIRECTA = "https://google.com"
 
-@st.cache_data(ttl=1800)  # Conserva en memoria RAM por 30 minutos para velocidad máxima
+@st.cache_data(ttl=1800)  # Mantiene los datos en memoria por 30 minutos
 def cargar_datos_vivos_consolidados():
     """
-    Descarga el archivo masivo usando 'requests' y lo procesa con un motor 
-    tolerante a fallos de comillas dobles y caracteres especiales en los textos de Sage 50.
+    Descarga el archivo masivo desde Google Drive y lo procesa con un motor
+    flexible que auto-detecta el delimitador real sin corromper la estructura de columnas.
     """
     try:
         # Petición HTTP directa a los servidores de Google Drive
-        respuesta = requests.get(URL_DESCARGA_DIRECTA, timeout=45)
+        respuesta = requests.get(URL_DESCARGA_DIRECTA, timeout=60)
         
         if respuesta.status_code == 200:
-            # Transmutamos el texto descargado en un flujo de memoria para Pandas
+            # Convertimos el texto en un flujo de lectura para Pandas
             objeto_memoria = io.StringIO(respuesta.text)
             
-            # MOTOR REPARADO: Se configura quoting=csv.QUOTE_NONE para que las comillas
-            # dentro de las descripciones de las ventanas no rompan las columnas.
+            # MOTOR EQUILIBRADO: Eliminamos la restricción rígida de QUOTE_NONE para
+            # evitar el desajuste de columnas, pero activamos la tolerancia a líneas corruptas.
             df = pd.read_csv(
                 objeto_memoria, 
-                sep=None, 
-                engine='python',
-                quoting=csv.QUOTE_NONE,
-                on_bad_lines='skip'  # Si hay alguna línea corrupta insalvable, la salta en lugar de colapsar
+                sep=None,             # Detecta automáticamente si usa comas (,) o puntos y comas (;)
+                engine='python',      # Requerido para usar la detección automática de separador
+                on_bad_lines='skip'   # Descarta limpiamente cualquier fila deforme sin tumbar el sistema
             )
             
-            # Limpieza rápida de comillas residuales en los nombres de las columnas si existieran
+            # Si el archivo se leyó pero no se estructuraron columnas correctas, salta la advertencia
+            if df.empty or len(df.columns) < 2:
+                return None
+                
+            # Limpieza estándar de impurezas en los nombres de las columnas
             df.columns = df.columns.str.replace('"', '').str.strip()
             
-            # Mapeo y tipificación obligatoria de columnas contables
+            # Mapeo y tipificación obligatoria de la línea temporal
             if 'Date_Time' in df.columns:
-                df['Fecha_Hora'] = pd.to_datetime(df['Date_Time'].astype(str).str.replace('"', ''), errors='coerce')
+                df['Fecha_Hora'] = pd.to_datetime(df['Date_Time'], errors='coerce')
             elif 'Fecha_Hora' in df.columns:
-                df['Fecha_Hora'] = pd.to_datetime(df['Fecha_Hora'].astype(str).str.replace('"', ''), errors='coerce')
+                df['Fecha_Hora'] = pd.to_datetime(df['Fecha_Hora'], errors='coerce')
             else:
-                df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0].astype(str).str.replace('"', ''), errors='coerce')
+                df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
 
             # Homologación estructural de nombres para el orquestador y la interfaz
-            df['Compañía'] = df['CompanyName'].astype(str).str.replace('"', '') if 'CompanyName' in df.columns else (df['Compañía'] if 'Compañía' in df.columns else "Sin Compañía")
-            df['Usuario'] = df['UserID'].astype(str).str.replace('"', '') if 'UserID' in df.columns else (df['Usuario'] if 'Usuario' in df.columns else "Desconocido")
-            df['Monto'] = pd.to_numeric(df['MainAmt'].astype(str).str.replace('"', ''), errors='coerce').fillna(0.0) if 'MainAmt' in df.columns else 0.0
-            df['Acción'] = df['EventAction'].astype(str).str.replace('"', '') if 'EventAction' in df.columns else "Clic"
-            df['Ventana_Detalle'] = df['WindowText'].astype(str).str.replace('"', '') if 'WindowText' in df.columns else ""
+            df['Compañía'] = df['CompanyName'] if 'CompanyName' in df.columns else (df['Compañía'] if 'Compañía' in df.columns else "Sin Compañía")
+            df['Usuario'] = df['UserID'] if 'UserID' in df.columns else (df['Usuario'] if 'Usuario' in df.columns else "Desconocido")
+            df['Monto'] = pd.to_numeric(df['MainAmt'], errors='coerce').fillna(0.0) if 'MainAmt' in df.columns else 0.0
+            df['Acción'] = df['EventAction'] if 'EventAction' in df.columns else "Clic"
+            df['Ventana_Detalle'] = df['WindowText'] if 'WindowText' in df.columns else ""
 
-            # Limpieza y ordenamiento cronológico de auditoría
+            # Limpieza y ordenamiento cronológico de auditoría interna
             df = df.dropna(subset=['Fecha_Hora'])
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             
