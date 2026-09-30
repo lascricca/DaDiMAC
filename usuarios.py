@@ -1,3 +1,6 @@
+import requests
+import streamlit as st
+
 # =====================================================================
 # CONFIGURACIÓN ESTÁTICA INTEGRAL DE GOOGLE FIREBASE IDENTITY API
 # =====================================================================
