@@ -7,10 +7,13 @@ import streamlit as st
 API_KEY_FIREBASE = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20"
 AUTH_DOMAIN_FIREBASE = "://firebaseapp.com"
 
-# URLS FIJAS CORREGIDAS (SIN FORMATO 'f' PARA EVITAR CONCATENACIÓN ERRÓNEA)
-URL_SIGN_IN = "https://googleapis.com"
-URL_SIGN_UP = "https://googleapis.com"
-URL_PASSWORD_RESET = "https://googleapis.com"
+# URLS FIJAS OFICIALES DE GOOGLE IDENTITY TOOLKIT API
+URL_SIGN_IN = f"https://googleapis.com{API_KEY_FIREBASE}"
+URL_SIGN_UP = f"https://googleapis.com{API_KEY_FIREBASE}"
+URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY_FIREBASE}"
+
+# ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
+HEADERS_JSON = {"Content-Type": "application/json"}
 
 def inicializar_sesion():
     """Mantiene la persistencia del estado de autenticación en la nube"""
@@ -26,12 +29,15 @@ def enviar_correo_restablecimiento(email):
         "email": email
     }
     try:
-        respuesta = requests.post(URL_PASSWORD_RESET, json=payload)
-        datos = respuesta.json()
+        respuesta = requests.post(URL_PASSWORD_RESET, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             return True, f"📩 Enlace enviado a **{email}**. Revisa tu bandeja de entrada o spam para restablecer tu contraseña."
         else:
-            error_msg = datos.get("error", {}).get("message", "Error desconocido")
+            try:
+                datos = respuesta.json()
+                error_msg = datos.get("error", {}).get("message", "Error desconocido")
+            except:
+                error_msg = f"Respuesta del servidor no-JSON (Código {respuesta.status_code})"
             return False, f"⚠️ Error de Firebase: {error_msg}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
@@ -44,14 +50,18 @@ def registrar_usuario_firebase(email, password):
         "returnSecureToken": True
     }
     try:
-        respuesta = requests.post(URL_SIGN_UP, json=payload)
-        datos = respuesta.json()
+        # Inyección explícita de headers para evitar rechazos de API
+        respuesta = requests.post(URL_SIGN_UP, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             return True, "🎉 Cuenta registrada con éxito."
         else:
-            error_msg = datos.get("error", {}).get("message", "Error al registrar")
-            if error_msg == "EMAIL_EXISTS":
-                error_msg = "Este correo electrónico ya está registrado."
+            try:
+                datos = respuesta.json()
+                error_msg = datos.get("error", {}).get("message", "Error al registrar")
+                if error_msg == "EMAIL_EXISTS":
+                    error_msg = "Este correo electrónico ya está registrado."
+            except:
+                error_msg = f"Google Cloud rechazó la petición. Código HTTP: {respuesta.status_code}. Verifica restricciones de API Key en Google Cloud Console."
             return False, f"⚠️ {error_msg}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
@@ -64,14 +74,18 @@ def validar_usuario_firebase(email, password):
         "returnSecureToken": True
     }
     try:
-        respuesta = requests.post(URL_SIGN_IN, json=payload)
-        datos = respuesta.json()
+        respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
+            datos = respuesta.json()
             return True, datos.get("email")
         else:
-            error_msg = datos.get("error", {}).get("message", "Error de acceso")
-            if error_msg in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
-                error_msg = "Credenciales incorrectas o inválidas."
+            try:
+                datos = respuesta.json()
+                error_msg = datos.get("error", {}).get("message", "Error de acceso")
+                if error_msg in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
+                    error_msg = "Credenciales incorrectas o inválidas."
+            except:
+                error_msg = f"Acceso denegado por políticas de red (Código {respuesta.status_code})"
             return False, f"⚠️ {error_msg}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
