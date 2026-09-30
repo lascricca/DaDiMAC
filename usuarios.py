@@ -1,26 +1,16 @@
-import requests
-import streamlit as st
-
 # =====================================================================
-# CONFIGURACIÓN OFICIAL COMPLETA - FIREBASE JS SDK ADAPTADA A PYTHON
+# CONFIGURACIÓN ESTÁTICA INTEGRAL DE GOOGLE FIREBASE IDENTITY API
 # =====================================================================
-CONFIG_FIREBASE = {
-    "apiKey": "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20",
-    "authDomain": "dadimac-62fd6.firebaseapp.com",
-    "projectId": "dadimac-62fd6",
-    "storageBucket": "dadimac-62fd6.firebasestorage.app",
-    "messagingSenderId": "584416752247",
-    "appId": "1:584416752247:web:ee50d44a8cd959c7cd8c72",
-    "measurementId": "G-E056EN4LCW"
-}
 
-# CONEXIÓN DIRECTA AL PROYECTO MEDIANTE GOOGLE IDENTITY TOOLKIT API
-API_KEY = CONFIG_FIREBASE["apiKey"]
-URL_SIGN_IN = f"https://googleapis.com{API_KEY}"
-URL_SIGN_UP = f"https://googleapis.com{API_KEY}"
-URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY}"
+# 1. Coloca aquí tu Web API Key (la encuentras en Firebase Console -> Configuración del proyecto)
+API_KEY = "AIzaSyD8DMId7FFGdbEOr0wmiw7yOqVBZbWSe20" 
 
-# ENCABEZADO OBLIGATORIO PARA QUE GOOGLE CLOUD ACEPTE LA PETICIÓN
+# 2. URLs oficiales y completas para la API REST de Firebase Auth
+URL_SIGN_UP = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
+URL_SIGN_IN = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+URL_PASSWORD_RESET = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={API_KEY}"
+
+# ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
 HEADERS_JSON = {"Content-Type": "application/json"}
 
 def inicializar_sesion():
@@ -68,7 +58,7 @@ def registrar_usuario_firebase(email, password):
                 if error_msg == "EMAIL_EXISTS":
                     error_msg = "Este correo electrónico ya está registrado."
             except:
-                error_msg = f"Error de Firebase Auth. Código HTTP: {respuesta.status_code}. Verifica restricciones en Google Cloud."
+                error_msg = f"Error de Firebase Auth. Código HTTP: {respuesta.status_code}."
             return False, f"⚠️ {error_msg}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
