@@ -1,66 +1,49 @@
-# conexion.py
-import os
-import pandas as pd
 import streamlit as st
+import pandas as pd
 
-# RUTA DEFINITIVA DEL ARCHIVO LOCAL REESTRUCTURADO
-RUTA_LOCAL_CSV = r"C:\Users\Luciano\Google Drive\LASA Panama\MAC - Proyectos\MAC - 1 Principal\DADISAGE\DaDiMAC - carpeta en servidor SRV-MAC\DaDiMAC_ExtraeCSV.csv"
+# =====================================================================
+# CONFIGURACIÓN CLOUD: EXTRACCIÓN TRANSACCIONAL DESDE GOOGLE DRIVE
+# =====================================================================
+# Identificador único extraído de tu enlace corporativo oficial
+ID_DOCUMENTO_DRIVE = "1X1vKvJIA4ymt_iPeeXlYDTPE0dzFoZbl"
 
+# URL de exportación directa en formato CSV estructurado para Pandas
+URL_DESCARGA_DIRECTA = f"https://google.com{ID_DOCUMENTO_DRIVE}/export?format=csv"
+
+@st.cache_data(ttl=1800)  # Conserva en caché por 30 minutos para optimizar la velocidad cloud
 def cargar_datos_vivos_consolidados():
     """
-    ABSORBEDOR ASILADO LOCAL: Lee el archivo consolidado usando punto y coma (;) como delimitador.
-    Mapea de forma directa las cabeceras validadas en la inspección estructural.
+    Descarga y procesa en la memoria RAM del servidor cloud el universo masivo 
+    de clics contables proveniente del Google Drive de MAC & Asociados.
     """
-    if not os.path.exists(RUTA_LOCAL_CSV):
-        st.error(f"❌ Archivo maestro ausente: No se localizó 'DaDiMAC_ExtraeCSV.csv' en la ruta local:\n   {RUTA_LOCAL_CSV}")
-        return pd.DataFrame()
-
     try:
-        # Cargamos el CSV forzando el separador por punto y coma (;) verificado
-        df_csv = pd.read_csv(RUTA_LOCAL_CSV, sep=';', encoding='utf-8', quotechar='"')
+        # Descarga directa del archivo CSV masivo
+        df = pd.read_csv(URL_DESCARGA_DIRECTA, sep=None, engine='python')
         
-        # Sanitización estricta de nombres de columnas (remueve espacios y caracteres ocultos como BOM)
-        df_csv.columns = df_csv.columns.str.replace('"', '').str.strip()
-        # Reparación específica por si la cadena trae el carácter BOM de bytes de Windows
-        df_csv.rename(columns={df_csv.columns[0]: 'Ruta'}, inplace=True)
-
-        # Construcción de la matriz unificada limpia para la interfaz gráfica
-        df_final = pd.DataFrame()
-        
-        # 1. PARSEO CRONOLÓGICO DIRECTO: Consumimos la columna 'TimeStamp' ya procesada
-        df_final['Fecha_Hora'] = pd.to_datetime(df_csv['TimeStamp'], errors='coerce')
-        
-        # 2. CAPTURA DE EMPRESA COMERCIAL: Almacenamos el nombre real para los filtros de Streamlit
-        df_final['Compañía'] = df_csv['CompanyName'].fillna('Sin Nombre Comercial').astype(str).str.strip()
-        df_final['CompanyDBN'] = df_csv['CompanyDBN'].fillna('SIN_ID').astype(str).str.strip()
-        
-        # 3. PERSONAL CONTABLE: Homologamos los nombres de usuario a minúsculas limpias
-        df_final['Usuario'] = df_csv['UserID'].fillna('sistema / odbc').astype(str).str.strip().str.lower()
-        df_final.loc[df_final['Usuario'] == 'not available', 'Usuario'] = 'sistema / odbc'
-        
-        # 4. TRADUCCIÓN DE CÓDIGOS DE ACCIÓN (Sage 50 nativo): Consumimos la columna 'Action'
-        df_csv['Action_Num'] = pd.to_numeric(df_csv['Action'], errors='coerce').fillna(0).astype(int)
-        mapeo_codigos = {1: "Guardó Transacción", 2: "Modificó Transacción", 3: "Eliminó Transacción", 4: "Inició Sesión", 5: "Cerró Sesión"}
-        df_final['Acción'] = df_csv['Action_Num'].map(mapeo_codigos).fillna("Operación Contable")
-        
-        # 5. UNIFICACIÓN DE DETALLE EN VENTANA: Combinamos la acción con la descripción y referencias
-        ventana_limpia = df_csv['Description'].fillna('').astype(str).str.strip()
-        ref_limpia = df_csv['Reference'].fillna('').astype(str).str.strip()
-        trans_limpia = df_csv['TransID'].fillna('').astype(str).str.strip()
-        
-        df_final['Ventana_Detalle'] = (ventana_limpia + " / " + ref_limpia + " / " + trans_limpia).str.strip(" / ")
-        df_final.loc[df_final['Ventana_Detalle'] == '', 'Ventana_Detalle'] = 'Auditoría de Sistema / Registro Pasivo'
-
-        # 6. EXTRACCIÓN MONETARIA: Limpieza y parseo de montos financieros de transacciones
-        if 'MainAmt' in df_csv.columns:
-            df_final['Monto'] = pd.to_numeric(df_csv['MainAmt'], errors='coerce').fillna(0.0)
+        # Mapeo y tipificación obligatoria de columnas contables
+        if 'Date_Time' in df.columns:
+            df['Fecha_Hora'] = pd.to_datetime(df['Date_Time'], errors='coerce')
+        elif 'Fecha_Hora' in df.columns:
+            df['Fecha_Hora'] = pd.to_datetime(df['Fecha_Hora'], errors='coerce')
         else:
-            df_final['Monto'] = 0.0
+            # Fallback en caso de que las cabeceras varíen ligeramente
+            df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
 
+        # Homologación estructural de nombres para el orquestador y la interfaz
+        df['Compañía'] = df['CompanyName'] if 'CompanyName' in df.columns else (df['Compañía'] if 'Compañía' in df.columns else "Sin Compañía")
+        df['Usuario'] = df['UserID'] if 'UserID' in df.columns else (df['Usuario'] if 'Usuario' in df.columns else "Desconocido")
+        df['Monto'] = df['MainAmt'] if 'MainAmt' in df.columns else (df['Monto'] if 'Monto' in df.columns else 0.0)
+        df['Acción'] = df['EventAction'] if 'EventAction' in df.columns else "Clic"
+        df['Ventana_Detalle'] = df['WindowText'] if 'WindowText' in df.columns else ""
+
+        # Limpieza de registros nulos en la línea temporal
+        df = df.dropna(subset=['Fecha_Hora'])
         
-        # Devolvemos el set limpio ordenado cronológicamente desde la transacción más reciente
-        return df_final.dropna(subset=['Fecha_Hora']).sort_values(by='Fecha_Hora', ascending=False)
+        # Ordenar cronológicamente para consistencia de auditoría
+        df = df.sort_values(by='Fecha_Hora', ascending=False)
+        
+        return df
         
     except Exception as e:
-        st.error(f"❌ Error al procesar la estructura del archivo CSV estructurado: {e}")
-        return pd.DataFrame()
+        st.error(f"⚠️ Error crítico de conexión al absorber base de datos en Google Drive: {e}")
+        return None
