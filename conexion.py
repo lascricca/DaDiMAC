@@ -4,23 +4,23 @@ import streamlit as st
 import pandas as pd
 
 # =====================================================================
-# CONFIGURACIÓN CLOUD: EXTRACCIÓN TRANSACCIONAL DESDE GOOGLE DRIVE
+# CONFIGURACIÓN CLOUD: RUTA ESTÁTICA DIRECTA A TU GOOGLE DRIVE
 # =====================================================================
-ID_DOCUMENTO_DRIVE = "1X1vKvJIA4ymt_iPeeXlYDTPE0dzFoZbl"
-URL_DESCARGA_DIRECTA = f"https://google.com{ID_DOCUMENTO_DRIVE}/export?format=csv"
+# Construcción fija de tu enlace oficial para evitar errores de formateo
+URL_DESCARGA_DIRECTA = "https://google.com"
 
-@st.cache_data(ttl=1800)  # Mantiene la base en memoria RAM por 30 minutos
+@st.cache_data(ttl=1800)  # Conserva en memoria RAM por 30 minutos para velocidad máster
 def cargar_datos_vivos_consolidados():
     """
-    Descarga el archivo masivo usando 'requests' para evadir restricciones de 
-    red del servidor cloud y procesa los clics contables de MAC & Asociados.
+    Descarga el archivo masivo usando 'requests' de forma directa y estática
+    para evadir cualquier error de resolución de nombres en Streamlit Cloud.
     """
     try:
-        # Forzamos la descarga mediante peticiones HTTP seguras de requests
-        respuesta = requests.get(URL_DESCARGA_DIRECTA, timeout=30)
+        # Petición HTTP directa a los servidores de Google Drive
+        respuesta = requests.get(URL_DESCARGA_DIRECTA, timeout=45)
         
         if respuesta.status_code == 200:
-            # Convertimos el texto descargado en un flujo de memoria para Pandas
+            # Transmutamos el texto descargado en un flujo de memoria para Pandas
             objeto_memoria = io.StringIO(respuesta.text)
             df = pd.read_csv(objeto_memoria, sep=None, engine='python')
             
@@ -32,14 +32,14 @@ def cargar_datos_vivos_consolidados():
             else:
                 df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
 
-            # Homologación estructural de nombres para la interfaz
+            # Homologación estructural de nombres para el orquestador y la interfaz
             df['Compañía'] = df['CompanyName'] if 'CompanyName' in df.columns else (df['Compañía'] if 'Compañía' in df.columns else "Sin Compañía")
             df['Usuario'] = df['UserID'] if 'UserID' in df.columns else (df['Usuario'] if 'Usuario' in df.columns else "Desconocido")
             df['Monto'] = df['MainAmt'] if 'MainAmt' in df.columns else (df['Monto'] if 'Monto' in df.columns else 0.0)
             df['Acción'] = df['EventAction'] if 'EventAction' in df.columns else "Clic"
             df['Ventana_Detalle'] = df['WindowText'] if 'WindowText' in df.columns else ""
 
-            # Limpieza y ordenamiento cronológico
+            # Limpieza y ordenamiento cronológico de auditoría
             df = df.dropna(subset=['Fecha_Hora'])
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             
