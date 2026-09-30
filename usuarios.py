@@ -6,7 +6,7 @@ import streamlit as st
 # =====================================================================
 
 # 1. Coloca aquí tu Web API Key (la encuentras en Firebase Console -> Configuración del proyecto)
-API_KEY = "AIzaSyD8DMId7FFGdbEOr0wmiw7yOqVBZbWSe20" 
+API_KEY = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20" 
 
 # 2. URLs oficiales y completas para la API REST de Firebase Auth
 URL_SIGN_UP = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
