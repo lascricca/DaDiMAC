@@ -1,6 +1,6 @@
 import requests
 import streamlit as st
-
+ 
 # =====================================================================
 # CREDENCIALES CLOUD CORPORATIVAS (GOOGLE FIREBASE)
 # =====================================================================
