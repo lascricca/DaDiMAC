@@ -4,21 +4,20 @@ import streamlit as st
 import pandas as pd
 
 # =====================================================================
-# EXTRACTOR CLOUD HÍBRIDO CON MULTI-CANAL DE CONTINGENCIA (GOOGLE DRIVE)
+# EXTRACTOR CLOUD HÍBRIDO - RUTAS 100% ESTÁTICAS E INDESTRUCTIBLES
 # =====================================================================
-ID_DOCUMENTO_DRIVE = "1X1vKvJIA4ymt_iPeeXlYDTPE0dzFoZbl"
 
-# Canal A: Exportación estándar para archivos subidos como texto plano (CSV)
-URL_CANAL_A = f"https://google.com{ID_DOCUMENTO_DRIVE}/export?format=csv"
+# Canal A: URL de texto plano absoluta sin variables dinámicas
+URL_CANAL_A = "https://google.com"
 
-# Canal B: Exportación forzada de hoja de cálculo nativa (Google Sheets) a nivel binario
-URL_CANAL_B = f"https://google.com{ID_DOCUMENTO_DRIVE}/export?format=csv&id={ID_DOCUMENTO_DRIVE}&gid=0"
+# Canal B: URL binaria de hoja nativa absoluta sin variables dinámicas
+URL_CANAL_B = "https://google.com&id=1X1vKvJIA4ymt_iPeeXlYDTPE0dzFoZbl&gid=0"
 
-@st.cache_data(ttl=900)  # Reduce el tiempo de caché a 15 minutos para acelerar la sincronización en caliente
+@st.cache_data(ttl=900)  # Conserva en memoria RAM por 15 minutos
 def cargar_datos_vivos_consolidados():
     """
     Descarga el archivo analítico aplicando un algoritmo de conmutación por error
-    para neutralizar cualquier alteración de formato provocada por Google Drive.
+    con enlaces literales para anular cualquier corrupción de variables en la nube.
     """
     df = None
     
@@ -44,14 +43,12 @@ def cargar_datos_vivos_consolidados():
 
     # --- VALIDACIÓN FINAL DE LA BASE DE DATOS CONTABLE ---
     if df is None or df.empty or len(df.columns) < 2:
-        return None  # Si ambos canales fallan, mantiene la alerta amarilla de control activo
+        return None
 
     # --- PROCESAMIENTO Y ESTANDARIZACIÓN DE COLUMNAS SAGE 50 ---
     try:
-        # Limpieza de impurezas en los nombres de las cabeceras
         df.columns = df.columns.str.replace('"', '').str.strip()
         
-        # Mapeo y tipificación cronológica obligatoria
         if 'Date_Time' in df.columns:
             df['Fecha_Hora'] = pd.to_datetime(df['Date_Time'], errors='coerce')
         elif 'Fecha_Hora' in df.columns:
@@ -59,14 +56,12 @@ def cargar_datos_vivos_consolidados():
         else:
             df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
 
-        # Homologación estructural de variables para la interfaz interactiva
         df['Compañía'] = df['CompanyName'] if 'CompanyName' in df.columns else (df['Compañía'] if 'Compañía' in df.columns else "Sin Compañía")
         df['Usuario'] = df['UserID'] if 'UserID' in df.columns else (df['Usuario'] if 'Usuario' in df.columns else "Desconocido")
         df['Monto'] = pd.to_numeric(df['MainAmt'], errors='coerce').fillna(0.0) if 'MainAmt' in df.columns else 0.0
         df['Acción'] = df['EventAction'] if 'EventAction' in df.columns else "Clic"
         df['Ventana_Detalle'] = df['WindowText'] if 'WindowText' in df.columns else ""
 
-        # Depuración final de registros corruptos o vacíos
         df = df.dropna(subset=['Fecha_Hora'])
         df = df.sort_values(by='Fecha_Hora', ascending=False)
         
