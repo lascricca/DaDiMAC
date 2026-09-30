@@ -1,16 +1,16 @@
 import requests
 import streamlit as st
- 
+
 # =====================================================================
 # CREDENCIALES CLOUD CORPORATIVAS (GOOGLE FIREBASE)
 # =====================================================================
 API_KEY_FIREBASE = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20"
-AUTH_DOMAIN_FIREBASE = "dadimac-62fd6.firebaseapp.com"
+AUTH_DOMAIN_FIREBASE = "://firebaseapp.com"
 
-# RUTAS OFICIALES REPARADAS DE GOOGLE IDENTITY TOOLKIT
-URL_SIGN_IN = f"https://googleapis.com{API_KEY_FIREBASE}"
-URL_SIGN_UP = f"https://googleapis.com{API_KEY_FIREBASE}"
-URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY_FIREBASE}"
+# URLS FIJAS CORREGIDAS (SIN FORMATO 'f' PARA EVITAR CONCATENACIÓN ERRÓNEA)
+URL_SIGN_IN = "https://googleapis.com"
+URL_SIGN_UP = "https://googleapis.com"
+URL_PASSWORD_RESET = "https://googleapis.com"
 
 def inicializar_sesion():
     """Mantiene la persistencia del estado de autenticación en la nube"""
