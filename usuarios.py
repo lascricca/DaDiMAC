@@ -2,17 +2,25 @@ import requests
 import streamlit as st
 
 # =====================================================================
-# CREDENCIALES CLOUD CORPORATIVAS (GOOGLE FIREBASE)
+# CONFIGURACIÓN OFICIAL COMPLETA - FIREBASE JS SDK ADAPTADA A PYTHON
 # =====================================================================
-API_KEY_FIREBASE = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20"
-AUTH_DOMAIN_FIREBASE = "://firebaseapp.com"
+CONFIG_FIREBASE = {
+    "apiKey": "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20",
+    "authDomain": "dadimac-62fd6.firebaseapp.com",
+    "projectId": "dadimac-62fd6",
+    "storageBucket": "dadimac-62fd6.firebasestorage.app",
+    "messagingSenderId": "584416752247",
+    "appId": "1:584416752247:web:ee50d44a8cd959c7cd8c72",
+    "measurementId": "G-E056EN4LCW"
+}
 
-# URLS FIJAS OFICIALES DE GOOGLE IDENTITY TOOLKIT API
-URL_SIGN_IN = f"https://googleapis.com{API_KEY_FIREBASE}"
-URL_SIGN_UP = f"https://googleapis.com{API_KEY_FIREBASE}"
-URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY_FIREBASE}"
+# CONEXIÓN DIRECTA AL PROYECTO MEDIANTE GOOGLE IDENTITY TOOLKIT API
+API_KEY = CONFIG_FIREBASE["apiKey"]
+URL_SIGN_IN = f"https://googleapis.com{API_KEY}"
+URL_SIGN_UP = f"https://googleapis.com{API_KEY}"
+URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY}"
 
-# ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
+# ENCABEZADO OBLIGATORIO PARA QUE GOOGLE CLOUD ACEPTE LA PETICIÓN
 HEADERS_JSON = {"Content-Type": "application/json"}
 
 def inicializar_sesion():
@@ -37,7 +45,7 @@ def enviar_correo_restablecimiento(email):
                 datos = respuesta.json()
                 error_msg = datos.get("error", {}).get("message", "Error desconocido")
             except:
-                error_msg = f"Respuesta del servidor no-JSON (Código {respuesta.status_code})"
+                error_msg = f"Rechazo de Google Cloud (Código {respuesta.status_code})"
             return False, f"⚠️ Error de Firebase: {error_msg}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
@@ -50,7 +58,6 @@ def registrar_usuario_firebase(email, password):
         "returnSecureToken": True
     }
     try:
-        # Inyección explícita de headers para evitar rechazos de API
         respuesta = requests.post(URL_SIGN_UP, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             return True, "🎉 Cuenta registrada con éxito."
@@ -61,7 +68,7 @@ def registrar_usuario_firebase(email, password):
                 if error_msg == "EMAIL_EXISTS":
                     error_msg = "Este correo electrónico ya está registrado."
             except:
-                error_msg = f"Google Cloud rechazó la petición. Código HTTP: {respuesta.status_code}. Verifica restricciones de API Key en Google Cloud Console."
+                error_msg = f"Error de Firebase Auth. Código HTTP: {respuesta.status_code}. Verifica restricciones en Google Cloud."
             return False, f"⚠️ {error_msg}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
