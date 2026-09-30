@@ -1,18 +1,13 @@
-# usuarios.py - SECCIÓN DE CREDENCIALES REALES INYECTADAS
 import requests
 import streamlit as st
 
 # =====================================================================
-# CREDENCIALES CLOUD DETECTADAS EN TU CONSOLA DE GOOGLE FIREBASE
+# CREDENCIALES CLOUD CORPORATIVAS (GOOGLE FIREBASE)
 # =====================================================================
 API_KEY_FIREBASE = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20"
 AUTH_DOMAIN_FIREBASE = "dadimac-62fd6.firebaseapp.com"
 
-# El resto del archivo con los endpoints (URL_SIGN_IN, URL_SIGN_UP, etc.) 
-# y la función login_sidebar() se quedan exactamente IGUAL debajo de esto.
-
-
-# Endpoints oficiales de la REST API de Google Firebase Identity Toolkit
+# ENDPOINTS OFICIALES COMPLETOS CON SIGNO DE INTERROGACIÓN INYECTADO
 URL_SIGN_IN = f"https://googleapis.com{API_KEY_FIREBASE}"
 URL_SIGN_UP = f"https://googleapis.com{API_KEY_FIREBASE}"
 URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY_FIREBASE}"
