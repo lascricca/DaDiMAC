@@ -94,7 +94,20 @@ def cargar_datos_vivos_consolidados():
             df['Compañía'] = df['companyname'] if 'companyname' in df.columns else (df['compañía'] if 'compañía' in df.columns else "Sin Compañía")
             df['Usuario'] = df['userid'] if 'userid' in df.columns else (df['usuario'] if 'usuario' in df.columns else "Desconocido")
             df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else 0.0
-            df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else "Clic"
+            #df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else "Clic"
+            # 1. Captura de datos reales desde la columna 'action' (homologada a minúsculas por el motor)
+            df['Acción'] = df['action'] if 'action' in df.columns else "Clic"
+            
+            # 2. Diccionario de traducción contable para auditoría ejecutiva
+            mapa_traduccion_sage = {
+                'add': 'Creó / Agregó',
+                'change': 'Modificó',
+                'delete': 'Eliminó'
+            }
+            
+            # 3. Aplicamos la traducción. Si viene un valor diferente (como logon/logoff), lo conserva intacto
+            df['Acción'] = df['Acción'].str.strip().str.lower().map(mapa_traduccion_sage).fillna(df['Acción'])
+
             #df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else ""
             # Mapea los datos de la columna original 'Description' (homologada a minúsculas)
             df['Ventana_Detalle'] = df['description'] if 'description' in df.columns else ""
