@@ -94,31 +94,29 @@ def cargar_datos_vivos_consolidados():
             df['Compañía'] = df['companyname'] if 'companyname' in df.columns else (df['compañía'] if 'compañía' in df.columns else "Sin Compañía")
             df['Usuario'] = df['userid'] if 'userid' in df.columns else (df['usuario'] if 'usuario' in df.columns else "Desconocido")
             df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else 0.0
-            #df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else "Clic"
-            # 1. Captura de datos desde la columna 'action' (homologada a minúsculas)
-            df['Acción'] = df['action'] if 'action' in df.columns else "Clic"
+                        
+            # =====================================================================
+            # HOMOLOGACIÓN DE COLUMNAS PARA EL DASHBOARD DA DIMAC
+            # =====================================================================
+            # 1. Extracción de la columna 'Description' original del CSV
             
-            # 2. Diccionario maestro de traducción de códigos numéricos de Sage Peachtree
-            mapa_numerico_sage = {
-                1: 'Agregó',
-                2: 'Modificó',
-                3: 'Eliminó',
-                4: 'Inicio de Sesión',
-                5: 'Cierre de Sesión',
-                '1': 'Agregó',
-                '2': 'Modificó',
-                '3': 'Eliminó',
-                '4': 'Inicio de Sesión',
-                '5': 'Cierre de Sesión'
-            }
-              
-            # 3. Reemplazamos los números por sus literales correspondientes en español
-            df['Acción'] = df['Acción'].map(mapa_numerico_sage).fillna(df['Acción'])
-
-            #df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else ""
-            # Mapea los datos de la columna original 'Description' (homologada a minúsculas)
             df['Ventana_Detalle'] = df['description'] if 'description' in df.columns else ""
-
+        
+            # 2. Captura de datos desde la columna numérica 'Action' del CSV de Sage
+            df['Acción'] = df['action'] if 'action' in df.columns else "Clic"
+        
+            # 3. Diccionario maestro con los códigos numéricos oficiales de Sage Peachtree
+            mapa_numerico_sage = {
+                0: 'Agregó',
+                1: 'Modificó',
+                2: 'Eliminó',
+                '0': 'Agregó',
+                '1': 'Modificó',
+                '2': 'Eliminó'
+            }
+        
+            # 4. Sustitución de los números por sus respectivos literales contables
+            df['Acción'] = df['Acción'].map(mapa_numerico_sage).fillna(df['Acción'])
 
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             return df
