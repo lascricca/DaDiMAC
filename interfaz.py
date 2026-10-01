@@ -137,21 +137,34 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (CON COLUMNA TIPO DE CLIC ACTUALIZADA)
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (FORZADO DE MEMORIA)
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
     
-    columnas_visibles = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Ventana_Detalle']
-    df_tabla_interactiva = df_filtrado[[c for c in columnas_visibles if c in df_filtrado.columns]].copy()
+    # Creamos una copia limpia para manipular la estructura
+    df_tabla_final = df_filtrado.copy()
+    
+    # CONTROL DE FUERZA BRUTA: Mapeamos Description o windowtext si la anterior falló por caché
+    if 'description' in df_tabla_final.columns:
+        df_tabla_final['Tipo de Clic'] = df_tabla_final['description']
+    elif 'windowtext' in df_tabla_final.columns:
+        df_tabla_final['Tipo de Clic'] = df_tabla_final['windowtext']
+    else:
+        df_tabla_final['Tipo de Clic'] = ""
+
+    # Si por alguna razón la columna anterior 'Ventana_Detalle' sigue existiendo, la usamos de respaldo
+    if 'Ventana_Detalle' in df_tabla_final.columns and df_tabla_final['Tipo de Clic'].isna().all():
+        df_tabla_final['Tipo de Clic'] = df_tabla_final['Ventana_Detalle']
+
+    # Definimos estrictamente las columnas finales con el nuevo nombre
+    columnas_tabla = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Tipo de Clic']
+    df_tabla_interactiva = df_tabla_final[[c for c in columnas_tabla if c in df_tabla_final.columns]].copy()
     
     if not df_tabla_interactiva.empty:
         df_tabla_interactiva['Fecha_Hora'] = df_tabla_interactiva['Fecha_Hora'].dt.strftime('%Y-%m-%d %H:%M:%S')
         if 'Monto' in df_tabla_interactiva.columns:
             df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
             
-        # Renombramos visualmente 'Ventana_Detalle' a 'Tipo de Clic' para el usuario final
-        df_tabla_interactiva.rename(columns={'Ventana_Detalle': 'Tipo de Clic'}, inplace=True)
-        
         st.dataframe(df_tabla_interactiva, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
