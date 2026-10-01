@@ -99,11 +99,13 @@ def cargar_datos_vivos_consolidados():
             # HOMOLOGACIÓN DE COLUMNAS PARA EL DASHBOARD DA DIMAC
             # =====================================================================
             # 1. Extracción de la columna 'Description' original del CSV
-            
             df['Ventana_Detalle'] = df['description'] if 'description' in df.columns else ""
         
             # 2. Captura de datos desde la columna numérica 'Action' del CSV de Sage
             df['Acción'] = df['action'] if 'action' in df.columns else "Clic"
+        
+            # NUEVO: Captura de datos desde la columna 'Reference' del CSV de Sage
+            df['Referencia'] = df['reference'] if 'reference' in df.columns else ""
         
             # 3. Diccionario maestro con los códigos numéricos oficiales de Sage Peachtree
             mapa_numerico_sage = {
