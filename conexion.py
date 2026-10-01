@@ -6,8 +6,7 @@ import pandas as pd
 # =====================================================================
 # CONFIGURACIÓN CLOUD DEFINITIVA: DECODIFICACIÓN EPOCH SAGE PEACHTREE
 # =====================================================================
-# Enlace maestro verificado con token criptográfico de L.A. Scricca Asesores, S.A.
-URL_FIREBASE_STORAGE = "https://googleapis.com"
+URL_FIREBASE_STORAGE = "https://firebasestorage.googleapis.com/v0/b/dadimac-62fd6.firebasestorage.app/o/DaDiMAC_ExtraeCSV.csv?alt=media&token=669de119-c19c-4946-9b11-305714951df4"
 
 def validar_y_convertir_epoch_sage(df_crudo):
     """
@@ -17,20 +16,19 @@ def validar_y_convertir_epoch_sage(df_crudo):
     # Guardamos la posición original de la fila física (Pandas base 0 + 2 por el encabezado del CSV)
     df_crudo['Fila_Excel'] = df_crudo.index + 2
     
-    if 'timestampraw' not Locke en df_crudo.columns and 'timestampraw' not in df_crudo.columns:
-        # Asegurar consistencia de la columna
-        df_crudo.rename(columns=lambda x: 'timestampraw' if x.lower() == 'timestampraw' else x, inplace=True)
+    # Asegurar consistencia en el nombre de la columna independientemente de las mayúsculas
+    df_crudo.rename(columns=lambda x: 'timestampraw' if x.lower() == 'timestampraw' else x, inplace=True)
 
     # Forzamos la conversión a valores numéricos (segundos enteros de Sage)
     segundos_sage = pd.to_numeric(df_crudo['timestampraw'], errors='coerce')
     
-    # 1. Detectar filas donde el valor no es un número entero convertible
+    # 1. Detectar filas donde el valor no es un número entero convertible (textos, vacíos, etc.)
     mascara_nan = segundos_sage.isna()
     
-    # 2. Convertir temporalmente a DateTime las filas válidas para analizar coherencia
+    # 2. Convertir temporalmente a DateTime las filas válidas para analizar coherencia temporal
     fechas_convertidas = pd.to_datetime(segundos_sage, unit='s', errors='coerce')
     
-    # Detectar fechas incoherentes (fuera del rango lógico de operaciones de la firma: 2000 a Año Actual)
+    # Detectar fechas fuera del rango lógico operativo de la firma (Años 2000 a 2026)
     anio_actual = pd.Timestamp.now().year
     mascara_anio_invalido = (fechas_convertidas.dt.year < 2000) | (fechas_convertidas.dt.year > anio_actual)
     
@@ -44,7 +42,7 @@ def validar_y_convertir_epoch_sage(df_crudo):
             f"en la columna 'timestampraw' que impiden calcular la fecha exacta."
         )
         
-        # Estructuramos el reporte con la posición de la fila física
+        # Estructuramos el reporte con la posición de la fila física para el auditor
         reporte = pd.DataFrame({
             'Fila Física (Excel/CSV)': df_corruptos['Fila_Excel'],
             'Valor Encontrado (SAGE Seconds)': df_corruptos['timestampraw'],
@@ -53,13 +51,13 @@ def validar_y_convertir_epoch_sage(df_crudo):
         })
         
         st.dataframe(reporte.sort_values(by='Fila Física (Excel/CSV)'), use_container_width=True)
-        st.info("💡 **Acción requerida:** Modifique o elimine estas posiciones directamente en su archivo antes de continuar.")
-        st.stop()
+        st.info("💡 **Acción requerida:** Modifique o elimine estas posiciones directamente en su archivo original de Sage antes de continuar.")
+        st.stop()  # Congela la carga de la UI de forma limpia para evitar fugas o descalces de memoria
         
     # Si la validación es exitosa, inyectamos la transformación matemática definitiva
     return fechas_convertidas
 
-@st.cache_data(ttl=1800)  # Mantiene la base de datos en caché por 30 minutes
+@st.cache_data(ttl=1800)  # Mantiene la base de datos en caché por 30 minutos
 def cargar_datos_vivos_consolidados():
     """
     Descarga el archivo analítico masivo de clics desde Firebase Storage
@@ -98,7 +96,7 @@ def cargar_datos_vivos_consolidados():
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             return df
         else:
-            st.error(f"⚠️ Firebase Storage rechazó la descarga. Código HTTP: {respuesta.status_code}. Renueve el token copiando la Download URL fresca.")
+            st.error(f"⚠️ Firebase Storage rechazó la descarga. Código HTTP: {respuesta.status_code}. Es altamente probable que requieras copiar una Download URL fresca desde la consola.")
             return None
             
     except Exception as e:
