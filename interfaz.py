@@ -39,11 +39,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     df_madrugada = df_filtrado[(df_filtrado['Fecha_Hora'].dt.hour >= 0) & (df_filtrado['Fecha_Hora'].dt.hour < 6)]
     clics_madrugada = len(df_madrugada)
-    
-    if total_movimientos_filtrados > 0:
-        porcentaje_madrugada = (clics_madrugada / total_movimientos_filtrados * 100)
-    else:
-        porcentaje_madrugada = 0.0
+    porcentaje_madrugada = (clics_madrugada / total_movimientos_filtrados * 100) if total_movimientos_filtrados > 0 else 0.0
 
     # Estilos CSS compactos para las métricas superiores
     st.markdown("""
@@ -77,11 +73,16 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         st.metric(label="📉 Coeficiente Variación", value=f"{variacion_porcentual:.1f}%")
 
     st.markdown("---")
-
-    # PORTADA UNIFICADA: FLUJO VERTICAL SECUENCIAL
     st.markdown("### 📈 Portada Analítica Avanzada (Horarios, Ránkings y Dinero)")
     
-    # 1. Gráfico de Campana de Gauss (Ancho completo con Línea de la Media)
+    # Filtro estricto para forzar solo el botón de pantalla completa (Fullscreen)
+    botones_limpieza = [
+        'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 
+        'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 
+        'hoverCompareCartesian', 'toggleSpikelines', 'toImage'
+    ]
+    
+    # 1. Gráfico de Campana de Gauss
     if len(datos_horas) > 5:
         try:
             eje_x_horas = np.linspace(0, 23.99, 500)
@@ -95,34 +96,18 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
             x_somb = eje_x_horas[(eje_x_horas >= lim_inf) & (eje_x_horas <= lim_sup)]
             y_somb = pdf_gauss[(eje_x_horas >= lim_inf) & (eje_x_horas <= lim_sup)]
             
-            fig_gauss.add_trace(go.Scatter(
-                x=x_somb, y=y_somb, mode='none', fill='tozeroy', 
-                fillcolor='rgba(38, 120, 254, 0.25)', 
-                name='Zona Primaria (68% de los Clics)'
-            ))
+            fig_gauss.add_trace(go.Scatter(x=x_somb, y=y_somb, mode='none', fill='tozeroy', fillcolor='rgba(38, 120, 254, 0.25)', name='Zona Primaria (68% de los Clics)'))
             
-            # INYECCIÓN MÁSTER: Línea discontinua vertical en el punto más alto (Media)
-            fig_gauss.add_vline(
-                x=media_matematica, 
-                line_width=2, 
-                line_dash="dash", 
-                line_color="#4A4A4A",
-                annotation_text=f" Hora Pico ({texto_hora_pico})",
-                annotation_position="top right"
-            )
+            fig_gauss.add_vline(x=media_matematica, line_width=2, line_dash="dash", line_color="#4A4A4A", annotation_text=f" Hora Pico ({texto_hora_pico})", annotation_position="top right")
             
             fig_gauss.update_layout(
                 title="Distribución Horaria del Esfuerzo Laboral (Campana de Gauss)",
-                xaxis_title="Hora del Día (0:00 - 23:59 Hrs)",
-                yaxis_title="Concentración (%)",
+                xaxis_title="Hora del Día (0:00 - 23:59 Hrs)", yaxis_title="Concentración (%)",
                 xaxis=dict(tickmode='array', tickvals=list(range(0, 25, 2)), range=[0, 23.99], fixedrange=True),
                 yaxis=dict(tickformat='.0%', minallowed=0, fixedrange=True),
-                hovermode=False,
-                template="plotly_white", height=340,
-                margin=dict(l=40, r=40, t=40, b=40),
-                legend=dict(orientation="h", y=-0.25)
+                hovermode=False, template="plotly_white", height=340, margin=dict(l=40, r=40, t=40, b=40), legend=dict(orientation="h", y=-0.25)
             )
-            st.plotly_chart(fig_gauss, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+            st.plotly_chart(fig_gauss, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
         except Exception as e:
             st.error(f"⚠️ Error en Gauss: {e}")
 
@@ -134,19 +119,9 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     top_companies.columns = ['Compañía', 'Clics']
     top10_comp = top_companies.head(10).sort_values(by='Clics', ascending=True)
     
-    fig_top_comp = px.bar(
-        top10_comp, x='Clics', y='Compañía', orientation='h',
-        title="Top 10 Empresas más Activas",
-        labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'},
-        color_continuous_scale='Blues', color='Clics'
-    )
-    fig_top_comp.update_layout(
-        xaxis=dict(fixedrange=True),
-        yaxis=dict(fixedrange=True),
-        hovermode=False,
-        template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False
-    )
-    st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+    fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics')
+    fig_top_comp.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
+    st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
 
     st.markdown("---")
 
@@ -156,19 +131,9 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     top_users.columns = ['Usuario', 'Clics']
     top10_user = top_users.head(10).sort_values(by='Clics', ascending=True)
     
-    fig_top_user = px.bar(
-        top10_user, x='Clics', y='Usuario', orientation='h',
-        title="Top 10 Usuarios Operativos",
-        labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'},
-        color_discrete_sequence=['#FF4B4B']
-    )
-    fig_top_user.update_layout(
-        xaxis=dict(fixedrange=True),
-        yaxis=dict(fixedrange=True),
-        hovermode=False,
-        template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20)
-    )
-    st.plotly_chart(fig_top_user, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+    fig_top_user = px.bar(top10_user, x='Clics', y='Usuario', orientation='h', title="Top 10 Usuarios Operativos", labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'}, color_discrete_sequence=['#FF4B4B'])
+    fig_top_user.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
+    st.plotly_chart(fig_top_user, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
 
     st.markdown("---")
 
@@ -178,35 +143,22 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         df_monetario = df_filtrado.groupby('Compañía')['Monto'].sum().reset_index()
         df_monetario = df_monetario.sort_values(by='Monto', ascending=False).head(10)
         
-        fig_monetario = px.bar(
-            df_monetario, x='Compañía', y='Monto',
-            title="Volumen Monetario Total por Firma ($ MainAmt)",
-            labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'},
-            text_auto='.2s', color_discrete_sequence=['#2CA02C']
-        )
-        fig_monetario.update_layout(
-            xaxis=dict(fixedrange=True, tickangle=-25),
-            yaxis=dict(fixedrange=True),
-            hovermode=False,
-            template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40)
-        )
-        st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+        fig_monetario = px.bar(df_monetario, x='Compañía', y='Monto', title="Volumen Monetario Total por Firma ($ MainAmt)", labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, text_auto='.2s', color_discrete_sequence=['#2CA02C'])
+        fig_monetario.update_layout(xaxis=dict(fixedrange=True, tickangle=-25), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40))
+        st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
         st.markdown("---")
 
     # 5. TABLA INTERACTIVA DE DATOS AL FINAL DE LA CASCADA
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
-    st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones específicas:")
+    st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
     
-    # Preparamos un DataFrame limpio y ordenado para no saturar visualmente
     columnas_visibles = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Ventana_Detalle']
     df_tabla_interactiva = df_filtrado[[c for c in columnas_visibles if c in df_filtrado.columns]].copy()
     
     if not df_tabla_interactiva.empty:
-        # Formateamos la columna Fecha_Hora para visualización ejecutiva limpia
         df_tabla_interactiva['Fecha_Hora'] = df_tabla_interactiva['Fecha_Hora'].dt.strftime('%Y-%m-%d %H:%M:%S')
         if 'Monto' in df_tabla_interactiva.columns:
             df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
-            
         st.dataframe(df_tabla_interactiva, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
