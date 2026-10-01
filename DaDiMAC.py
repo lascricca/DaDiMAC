@@ -31,19 +31,13 @@ st.set_page_config(page_title="Dashboard DaDiMAC", layout="wide", initial_sideba
 # Bloqueo Máster de Seguridad con Firebase Auth
 if usuarios.login_sidebar():
     # =====================================================================
-    # ENCABEZADO DEL DASHBOARD: TÍTULO Y LOGO DE LA MARCA COALINEADOS
+    # ENCABEZADO DEL DASHBOARD: LOGO SUPERIOR IZQUIERDO Y TÍTULO ABAJO
     # =====================================================================
-    # Creamos dos columnas: 85% para el título y 15% para el logo de la marca
-    col_titulo, col_logo = st.columns([0.85, 0.15])
+    # 1. Renderiza primero el logo alineado a la izquierda (Ancho de 156 píxeles)
+    st.image("LOGO MAC.jpeg", width=156, use_container_width=False)
     
-    with col_titulo:
-        # Usamos st.subheader para reducir drásticamente el tamaño de las letras grandes
-        #st.subheader("Dashboard de Auditoría DaDiMAC - Cloud")
-        # Usamos HTML con estilo CSS para fijar un tamaño intermedio ideal (28 píxeles)
-        st.markdown('<h2 style="font-size: 42px; margin-top: 0px;">Dashboard de Auditoría DaDiMAC - Cloud</h2>', unsafe_allow_html=True)    
-    with col_logo:
-        # Inserta el logo a un tamaño compacto de 52 píxeles alineado con el encabezado
-        st.image("LOGO MAC.jpeg", width=156, use_container_width=False)
+    # 2. Renderiza el título de la firma justo debajo del logo con tamaño de 42px
+    st.markdown('<h2 style="font-size: 42px; margin-top: 15px; margin-bottom: 5px;">Dashboard de Auditoría DaDiMAC - Cloud</h2>', unsafe_allow_html=True)    
     
     st.info(f"☁️ **Modo Servidor Cloud Activo** | Consultor: {st.session_state.usuario_email}")
 
