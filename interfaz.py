@@ -75,7 +75,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     st.markdown("---")
     st.markdown("### 📈 Portada Analítica Avanzada (Horarios, Ránkings y Dinero)")
     
-    # Filtro estricto para forzar solo el botón de pantalla completa (Fullscreen)
+    # Filtro estricto para remover herramientas interactivas de Plotly que alteran el gráfico al tacto
     botones_limpieza = [
         'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 
         'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 
