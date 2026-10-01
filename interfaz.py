@@ -137,7 +137,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (CON COLUMNA TIPO DE CLIC ACTUALIZADA)
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
     
@@ -148,6 +148,10 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         df_tabla_interactiva['Fecha_Hora'] = df_tabla_interactiva['Fecha_Hora'].dt.strftime('%Y-%m-%d %H:%M:%S')
         if 'Monto' in df_tabla_interactiva.columns:
             df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
+            
+        # Renombramos visualmente 'Ventana_Detalle' a 'Tipo de Clic' para el usuario final
+        df_tabla_interactiva.rename(columns={'Ventana_Detalle': 'Tipo de Clic'}, inplace=True)
+        
         st.dataframe(df_tabla_interactiva, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
