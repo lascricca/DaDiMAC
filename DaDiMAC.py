@@ -27,6 +27,7 @@ if usuarios.login_sidebar():
         # =====================================================================
         # Si tienes el archivo guardado en tu repositorio de GitHub, usa el nombre del archivo:
         st.sidebar.image("LOGO LASA.gif", width=104, use_container_width=False)
+        st.sidebar.markdown("### L.A. Scricca Asesores, S.A.")
         
         # NOTA: Si prefieres cargarlo desde una dirección web (URL pública), 
         # puedes reemplazar el texto anterior por el enlace directo entre comillas.
