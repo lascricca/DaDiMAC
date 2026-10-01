@@ -5,20 +5,16 @@ import streamlit as st
 import pandas as pd
 
 # =====================================================================
-# CONFIGURACIÓN CLOUD DEFINITIVA: EMBARQUE DESDE FIREBASE STORAGE
+# CONFIGURACIÓN CLOUD DEFINITIVA: ENLACE LITERAL DESDE FIREBASE STORAGE
 # =====================================================================
-BUCKET_NAME = "dadimac-62fd6.firebasestorage.app" 
-NOMBRE_ARCHIVO = "DaDiMAC_ExtraeCSV.csv" 
-
-# Codificación segura del nombre del archivo para la API de Google Cloud
-ARCHIVO_CODIFICADO = urllib.parse.quote(NOMBRE_ARCHIVO, safe="")
-URL_FIREBASE_STORAGE = f"https://googleapis.com{BUCKET_NAME}/o/{ARCHIVO_CODIFICADO}?alt=media"
+# Dirección estática oficial e indestructible para evitar corrupciones de texto
+URL_FIREBASE_STORAGE = "https://googleapis.com"
 
 @st.cache_data(ttl=1800)  # Mantiene la base de datos en caché por 30 minutos para máxima fluidez
 def cargar_datos_vivos_consolidados():
     """
     Descarga el archivo analítico masivo de clics directamente desde Firebase Storage
-    y aplica un mapeo inteligente e inmune a variaciones de mayúsculas/minúsculas.
+    utilizando una ruta fija inmune a errores de concatenación dinámica en la nube.
     """
     try:
         # Petición HTTP directa al bucket de almacenamiento liberado
