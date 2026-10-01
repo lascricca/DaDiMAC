@@ -95,25 +95,25 @@ def cargar_datos_vivos_consolidados():
             df['Usuario'] = df['userid'] if 'userid' in df.columns else (df['usuario'] if 'usuario' in df.columns else "Desconocido")
             df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else 0.0
             #df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else "Clic"
-              # 1. Captura de datos desde la columna 'action' (homologada a minúsculas)
-              df['Acción'] = df['action'] if 'action' in df.columns else "Clic"
+            # 1. Captura de datos desde la columna 'action' (homologada a minúsculas)
+            df['Acción'] = df['action'] if 'action' in df.columns else "Clic"
+            
+            # 2. Diccionario maestro de traducción de códigos numéricos de Sage Peachtree
+            mapa_numerico_sage = {
+                1: 'Agregó',
+                2: 'Modificó',
+                3: 'Eliminó',
+                4: 'Inicio de Sesión',
+                5: 'Cierre de Sesión',
+                '1': 'Agregó',
+                '2': 'Modificó',
+                '3': 'Eliminó',
+                '4': 'Inicio de Sesión',
+                '5': 'Cierre de Sesión'
+            }
               
-              # 2. Diccionario maestro de traducción de códigos numéricos de Sage Peachtree
-              mapa_numerico_sage = {
-                  1: 'Agregó',
-                  2: 'Modificó',
-                  3: 'Eliminó',
-                  4: 'Inicio de Sesión',
-                  5: 'Cierre de Sesión',
-                  '1': 'Agregó',
-                  '2': 'Modificó',
-                  '3': 'Eliminó',
-                  '4': 'Inicio de Sesión',
-                  '5': 'Cierre de Sesión'
-              }
-              
-              # 3. Reemplazamos los números por sus literales correspondientes en español
-              df['Acción'] = df['Acción'].map(mapa_numerico_sage).fillna(df['Acción'])
+            # 3. Reemplazamos los números por sus literales correspondientes en español
+            df['Acción'] = df['Acción'].map(mapa_numerico_sage).fillna(df['Acción'])
 
             #df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else ""
             # Mapea los datos de la columna original 'Description' (homologada a minúsculas)
