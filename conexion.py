@@ -1,29 +1,28 @@
 import io
-import urllib.parse
 import requests
 import streamlit as st
 import pandas as pd
 
 # =====================================================================
-# CONFIGURACIÓN CLOUD DEFINITIVA: ENLACE LITERAL DESDE FIREBASE STORAGE
+# CONFIGURACIÓN CLOUD DEFINITIVA: EMBARQUE AUTORIZADO DESDE FIREBASE
 # =====================================================================
-# Dirección estática oficial e indestructible para evitar corrupciones de texto
-URL_FIREBASE_STORAGE = "https://googleapis.com"
+# Enlace maestro verificado con token criptográfico de L.A. Scricca Asesores, S.A.
+URL_FIREBASE_STORAGE = "https://firebasestorage.googleapis.com/v0/b/dadimac-62fd6.firebasestorage.app/o/DaDiMAC_ExtraeCSV.csv?alt=media&token=669de119-c19c-4946-9b11-305714951df4"
 
-@st.cache_data(ttl=1800)  # Mantiene la base de datos en caché por 30 minutos para máxima fluidez
+@st.cache_data(ttl=1800)  # Conserva en memoria RAM por 30 minutos para velocidad máxima
 def cargar_datos_vivos_consolidados():
     """
-    Descarga el archivo analítico masivo de clics directamente desde Firebase Storage
-    utilizando una ruta fija inmune a errores de concatenación dinámica en la nube.
+    Descarga el archivo analítico masivo de clics directamente desde la red 
+    interna de Firebase Storage utilizando el token oficial de acceso público.
     """
     try:
-        # Petición HTTP directa al bucket de almacenamiento liberado
+        # Petición HTTP directa al bucket de almacenamiento utilizando el canal verificado
         respuesta = requests.get(URL_FIREBASE_STORAGE, timeout=60)
         
         if respuesta.status_code == 200:
             objeto_memoria = io.StringIO(respuesta.text)
             
-            # Motor robusto de lectura automática de separadores
+            # Motor robusto de lectura automática de separadores (detecta comas o puntos y comas)
             df = pd.read_csv(
                 objeto_memoria, 
                 sep=None, 
@@ -34,7 +33,7 @@ def cargar_datos_vivos_consolidados():
             if df.empty or len(df.columns) < 1:
                 return None
                 
-            # Homologación total de columnas a minúsculas y sin impurezas para evitar descalces
+            # Homologación total de columnas a minúsculas para evitar descalces por mayúsculas
             df.columns = df.columns.str.replace('"', '').str.strip().str.lower()
             
             # 1. ESCÁNER INTELIGENTE DE LA LÍNEA TEMPORAL (FECHA Y HORA)
@@ -49,23 +48,22 @@ def cargar_datos_vivos_consolidados():
             if col_fecha_encontrada:
                 df['Fecha_Hora'] = pd.to_datetime(df[col_fecha_encontrada], errors='coerce')
             else:
-                # Si las cabeceras fallan, tomamos la primera columna por defecto
+                # Si las cabeceras fallan o vienen alteradas, tomamos la primera columna por defecto
                 df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
 
-            # 2. HOMOLOGACIÓN DE VARIABLES CONTABLES ADAPTATIVA
+            # 2. HOMOLOGACIÓN DE VARIABLES CONTABLES INTERACTIVAS DE SAGE 50
             df['Compañía'] = df['companyname'] if 'companyname' in df.columns else (df['compañía'] if 'compañía' in df.columns else "Sin Compañía")
             df['Usuario'] = df['userid'] if 'userid' in df.columns else (df['usuario'] if 'usuario' in df.columns else "Desconocido")
-            df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else (pd.to_numeric(df['monto'], errors='coerce').fillna(0.0) if 'monto' in df.columns else 0.0)
-            df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else (df['acción'] if 'acción' in df.columns else "Clic")
-            df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else (df['ventana_detalle'] if 'ventana_detalle' in df.columns else "")
+            df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else 0.0
+            df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else "Clic"
+            df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else ""
 
-            # Limpieza de nulos únicamente si la conversión falló drásticamente
+            # Depuración de registros donde la fecha falló críticamente
             if df['Fecha_Hora'].notna().sum() > 0:
                 df = df.dropna(subset=['Fecha_Hora'])
             
-            # Ordenamiento cronológico de auditoría
+            # Ordenamiento cronológico de auditoría (más reciente primero)
             df = df.sort_values(by='Fecha_Hora', ascending=False)
-            
             return df
         else:
             st.error(f"⚠️ Firebase Storage rechazó la descarga. Código HTTP: {respuesta.status_code}")
