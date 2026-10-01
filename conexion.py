@@ -4,9 +4,12 @@ import streamlit as st
 import pandas as pd
 
 # =====================================================================
-# CONFIGURACIÓN CLOUD DEFINITIVA: EMBARQUE AUTORIZADO DESDE FIREBASE
+# CONFIGURACIÓN CLOUD DEFINITIVA: AUDITORÍA DE CALIDAD DESDE FIREBASE
 # =====================================================================
-URL_FIREBASE_STORAGE = "https://googleapis.com"
+
+# ⚠️ REEMPLAZA ESTA URL CON EL ENLACE FRESCO QUE COPIES DE FIREBASE CONSOLE
+# El token actual puede haber expirado y causar el error 404.
+URL_FIREBASE_STORAGE = "https://firebasestorage.googleapis.com/v0/b/dadimac-62fd6.firebasestorage.app/o/DaDiMAC_ExtraeCSV.csv?alt=media&token=669de119-c19c-4946-9b11-305714951df4"
 
 def validar_integridad_cronologica(df_crudo):
     """
@@ -31,18 +34,18 @@ def validar_integridad_cronologica(df_crudo):
         st.error("### 🛑 Control de Calidad DaDiMAC: Registros Corruptos Detectados")
         st.warning(
             f"Se han localizado **{len(df_corruptos)} filas** en el archivo 'DaDiMAC_ExtraeCSV.csv' con formatos "
-            f"de fecha inválidos o años fuera de rango que impiden la renderización del calendario en la web."
+            f"de fecha inválidos o años fuera de rango en la columna 'timestampraw' que impiden abrir el calendario."
         )
         
-        # Estructuramos un reporte limpio para el auditor
+        # Estructuramos el reporte exacto con la posición de la fila para el auditor
         reporte = pd.DataFrame({
-            'Fila en Archivo Original': df_corruptos['Fila_Excel'],
+            'Fila Física (Excel/CSV)': df_corruptos['Fila_Excel'],
             'Valor Encontrado (TimeStampRaw)': df_corruptos['timestampraw'],
             'Compañía': df_corruptos['companyname'] if 'companyname' in df_corruptos.columns else "N/A",
             'Usuario': df_corruptos['userid'] if 'userid' in df_corruptos.columns else "N/A"
         })
         
-        st.dataframe(reporte.sort_values(by='Fila en Archivo Original'), use_container_width=True)
+        st.dataframe(reporte.sort_values(by='Fila Física (Excel/CSV)'), use_container_width=True)
         st.info("💡 **Acción requerida:** Corrija los valores listados arriba directamente en su base de datos o archivo de extracción antes de continuar.")
         st.stop()  # Detiene por completo la ejecución de DaDiMAC.py de forma limpia
 
@@ -87,7 +90,7 @@ def cargar_datos_vivos_consolidados():
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             return df
         else:
-            st.error(f"⚠️ Firebase Storage rechazó la descarga. Código HTTP: {respuesta.status_code}")
+            st.error(f"⚠️ Firebase Storage rechazó la descarga. Código HTTP: {respuesta.status_code}. Copie el enlace de descarga fresco desde la consola de Firebase para renovar el token.")
             return None
             
     except Exception as e:
