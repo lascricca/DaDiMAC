@@ -87,7 +87,8 @@ def cargar_datos_vivos_consolidados():
             df['Fecha_Hora'] = validar_y_convertir_epoch_sage(df)
             
             # AJUSTE DE ZONA HORARIA ADICIONAL: Desplazamiento estricto a la hora local de Panamá (UTC-5)
-            df['Fecha_Hora'] = df['Fecha_Hora'] - pd.Timedelta(hours=5)
+            # df['Fecha_Hora'] = df['Fecha_Hora'] - pd.Timedelta(hours=5)
+            df['Fecha_Hora'] = validar_y_convertir_epoch_sage(df) - pd.Timedelta(hours=5)
             
             # Homologación de variables para la interfaz gráfica
             df['Compañía'] = df['companyname'] if 'companyname' in df.columns else (df['compañía'] if 'compañía' in df.columns else "Sin Compañía")
