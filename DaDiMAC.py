@@ -22,8 +22,9 @@ if usuarios.login_sidebar():
     
     with col_titulo:
         # Usamos st.subheader para reducir drásticamente el tamaño de las letras grandes
-        st.subheader("Dashboard de Auditoría DaDiMAC - Cloud")
-    
+        #st.subheader("Dashboard de Auditoría DaDiMAC - Cloud")
+        # Usamos HTML con estilo CSS para fijar un tamaño intermedio ideal (28 píxeles)
+        st.markdown('<h2 style="font-size: 28px; margin-top: 0px;">Dashboard de Auditoría DaDiMAC - Cloud</h2>', unsafe_allow_html=True)    
     with col_logo:
         # Inserta el logo a un tamaño compacto de 52 píxeles alineado con el encabezado
         st.image("LOGO MAC.jpeg", width=156, use_container_width=False)
