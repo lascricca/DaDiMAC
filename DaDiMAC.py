@@ -26,7 +26,7 @@ if usuarios.login_sidebar():
     
     with col_logo:
         # Inserta el logo a un tamaño compacto de 52 píxeles alineado con el encabezado
-        st.image("image_2FwtZh.png", width=156, use_container_width=False)
+        st.image("LOGO MAC.jpeg", width=156, use_container_width=False)
     
     st.info(f"☁️ **Modo Servidor Cloud Activo** | Consultor: {st.session_state.usuario_email}")
 
