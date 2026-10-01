@@ -137,7 +137,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (FORZADO DE MEMORIA)
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (CON COLUMNA REFERENCIA INCLUIDA)
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
     
@@ -152,12 +152,11 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     else:
         df_tabla_final['Tipo de Clic'] = ""
 
-    # Si por alguna razón la columna anterior 'Ventana_Detalle' sigue existiendo, la usamos de respaldo
     if 'Ventana_Detalle' in df_tabla_final.columns and df_tabla_final['Tipo de Clic'].isna().all():
         df_tabla_final['Tipo de Clic'] = df_tabla_final['Ventana_Detalle']
 
-    # Definimos estrictamente las columnas finales con el nuevo nombre
-    columnas_tabla = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Tipo de Clic']
+    # DEFINICIÓN SECUENCIAL: Ubicamos 'Referencia' exactamente después de 'Monto'
+    columnas_tabla = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Referencia', 'Tipo de Clic']
     df_tabla_interactiva = df_tabla_final[[c for c in columnas_tabla if c in df_tabla_final.columns]].copy()
     
     if not df_tabla_interactiva.empty:
