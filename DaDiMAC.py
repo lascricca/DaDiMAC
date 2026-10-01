@@ -26,7 +26,7 @@ if usuarios.login_sidebar():
         # ENCABEZADO DE LA BARRA LATERAL: LOGO DE LA MARCA
         # =====================================================================
         # Si tienes el archivo guardado en tu repositorio de GitHub, usa el nombre del archivo:
-        st.sidebar.image("LOGO LASA.gif", width=52, use_container_width=False)
+        st.sidebar.image("LOGO LASA.gif", width=104, use_container_width=False)
         
         # NOTA: Si prefieres cargarlo desde una dirección web (URL pública), 
         # puedes reemplazar el texto anterior por el enlace directo entre comillas.
