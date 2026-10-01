@@ -6,17 +6,53 @@ import pandas as pd
 # =====================================================================
 # CONFIGURACIÓN CLOUD DEFINITIVA: EMBARQUE AUTORIZADO DESDE FIREBASE
 # =====================================================================
-# Enlace maestro verificado con token criptográfico de L.A. Scricca Asesores, S.A.
 URL_FIREBASE_STORAGE = "https://googleapis.com"
 
-@st.cache_data(ttl=1800)  # Mantiene la base de datos en caché por 30 minutos para máxima fluidez
+def validar_integridad_cronologica(df_crudo):
+    """
+    Analiza la columna 'timestampraw' antes de entregar los datos a la interfaz.
+    Si encuentra anomalías que rompen el calendario, genera un reporte y frena la ejecución.
+    """
+    # Guardamos la posición original de la fila física (Pandas base 0 + 2 por el encabezado del CSV)
+    df_crudo['Fila_Excel'] = df_crudo.index + 2
+    
+    # 1. Detectar registros donde la conversión a fecha falla por completo (NaT)
+    fechas_convertidas = pd.to_datetime(df_crudo['timestampraw'], errors='coerce')
+    mascara_nan = fechas_convertidas.isna()
+    
+    # 2. Detectar registros con años incoherentes (fuera del rango lógico 2000 - Año Actual)
+    anio_actual = pd.Timestamp.now().year
+    mascara_anio_invalido = (fechas_convertidas.dt.year < 2000) | (fechas_convertidas.dt.year > anio_actual)
+    
+    # Consolidamos todas las filas corruptas
+    df_corruptos = df_crudo[mascara_nan | (mascara_anio_invalido & ~mascara_nan)]
+    
+    if not df_corruptos.empty:
+        st.error("### 🛑 Control de Calidad DaDiMAC: Registros Corruptos Detectados")
+        st.warning(
+            f"Se han localizado **{len(df_corruptos)} filas** en el archivo 'DaDiMAC_ExtraeCSV.csv' con formatos "
+            f"de fecha inválidos o años fuera de rango que impiden la renderización del calendario en la web."
+        )
+        
+        # Estructuramos un reporte limpio para el auditor
+        reporte = pd.DataFrame({
+            'Fila en Archivo Original': df_corruptos['Fila_Excel'],
+            'Valor Encontrado (TimeStampRaw)': df_corruptos['timestampraw'],
+            'Compañía': df_corruptos['companyname'] if 'companyname' in df_corruptos.columns else "N/A",
+            'Usuario': df_corruptos['userid'] if 'userid' in df_corruptos.columns else "N/A"
+        })
+        
+        st.dataframe(reporte.sort_values(by='Fila en Archivo Original'), use_container_width=True)
+        st.info("💡 **Acción requerida:** Corrija los valores listados arriba directamente en su base de datos o archivo de extracción antes de continuar.")
+        st.stop()  # Detiene por completo la ejecución de DaDiMAC.py de forma limpia
+
+@st.cache_data(ttl=1800)  # Mantiene la base de datos en caché por 30 minutos
 def cargar_datos_vivos_consolidados():
     """
-    Descarga el archivo analítico masivo de clics directamente desde Firebase Storage.
-    Ignora de forma estricta la columna 'timestamp' y procesa 'timestampraw' en formato Sage.
+    Descarga el archivo analítico masivo de clics desde Firebase Storage
+    y ejecuta obligatoriamente el módulo de validación de integridad.
     """
     try:
-        # Petición HTTP directa al bucket de almacenamiento utilizando el canal verificado
         respuesta = requests.get(URL_FIREBASE_STORAGE, timeout=60)
         
         if respuesta.status_code == 200:
@@ -33,45 +69,21 @@ def cargar_datos_vivos_consolidados():
             if df.empty or len(df.columns) < 1:
                 return None
                 
-            # Homologación total de columnas a minúsculas y sin impurezas de texto
+            # Homologación total de columnas a minúsculas para el motor de validación
             df.columns = df.columns.str.replace('"', '').str.strip().str.lower()
             
-            # 1. PROCESAMIENTO EXCLUSIVO DE LA COLUMNA TIMESTAMPRAW DE SAGE
-            if 'timestampraw' in df.columns:
-                # Se fuerza la conversión de la cronología nativa de Sage 50 ignorando 'timestamp'
-                df['Fecha_Hora'] = pd.to_datetime(df['timestampraw'], errors='coerce')
-            else:
-                # Mapeo de contingencia si viene en otra variante de texto
-                columnas_alternas = ['date_time', 'fecha_hora']
-                col_encontrada = None
-                for col in columnas_alternas:
-                    if col in df.columns:
-                        col_encontrada = col
-                        break
-                if col_encontrada:
-                    df['Fecha_Hora'] = pd.to_datetime(df[col_encontrada], errors='coerce')
-                else:
-                    df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
-
-            # 2. HOMOLOGACIÓN DE VARIABLES CONTABLES INTERACTIVAS DE SAGE 50
+            # MÓDULO DE VALIDACIÓN ACTIVO: Si hay errores, detendrá la app y mostrará las filas
+            validar_integridad_cronologica(df)
+            
+            # Si pasa la validación con éxito, procesamos las variables normalmente
+            df['Fecha_Hora'] = pd.to_datetime(df['timestampraw'])
+            
             df['Compañía'] = df['companyname'] if 'companyname' in df.columns else (df['compañía'] if 'compañía' in df.columns else "Sin Compañía")
             df['Usuario'] = df['userid'] if 'userid' in df.columns else (df['usuario'] if 'usuario' in df.columns else "Desconocido")
             df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else 0.0
             df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else "Clic"
             df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else ""
 
-            # Depuración estricta de registros donde la fecha de Sage falló críticamente
-            df = df.dropna(subset=['Fecha_Hora'])
-            
-            # FILTRO DE SEGURIDAD CRÍTICO: Acotamos las fechas para sanear registros corruptos 
-            # del log de Sage (ej: años erróneos como 1970 o 2099) que rompen el date_input de Streamlit.
-            anio_actual = pd.Timestamp.now().year
-            df = df[(df['Fecha_Hora'].dt.year >= 2000) & (df['Fecha_Hora'].dt.year <= anio_actual)]
-            
-            if df.empty:
-                return None
-
-            # Ordenamiento cronológico de auditoría (más reciente primero)
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             return df
         else:
