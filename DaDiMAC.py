@@ -8,6 +8,22 @@ import conexion
 import interfaz
 import usuarios  # Módulo de Autenticación con Firebase
 
+# =====================================================================
+# BLINDAJE INTERACTIVO GLOBAL: CONGELAMIENTO AL TACTO Y MOUSE
+# =====================================================================
+st.markdown(
+    """
+    <style>
+    /* Bloquea la interacción del mouse y gestos táctiles en los contenedores de gráficos */
+    .grafico-estatico {
+        pointer-events: none;
+        user-select: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Configuración inicial de la interfaz
 st.set_page_config(page_title="Dashboard DaDiMAC", layout="wide", initial_sidebar_state="expanded")
 
