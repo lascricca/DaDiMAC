@@ -129,11 +129,19 @@ if usuarios.login_sidebar():
             else:
                 df_final_filtrado = df_filtrado_fechas[df_filtrado_fechas['Usuario'].isin(usuarios_seleccionados)].copy()
             
-            # PASO 2: Envío al renderizador de interfaz.py (mantiene la campana de Gauss, línea de media, ránkings y tabla)
+            # PASO 2: Envío al renderizador de interfaz.py protegido por el escudo de congelamiento
             if not df_final_filtrado.empty:
+                # Abrimos el contenedor invisible que bloquea la interacción del mouse y pantallas táctiles
+                st.markdown('<div class="grafico-estatico">', unsafe_allow_html=True)
+            
+                # Tu llamada original a interfaz.py permanece completamente intacta y operativa
                 interfaz.renderizar_dashboard(df_final_filtrado, fecha_inicio, fecha_fin, df_csv_origen=df_completo)
+            
+                # Cerramos el escudo de protección
+                st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.warning("⚠️ No se localizaron movimientos contables para los criterios seleccionadas.")
+
     else:
         st.warning("⚠️ El archivo 'DaDiMAC_ExtraeCSV.csv' está vacío o desincronizado.")
 else:
