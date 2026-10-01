@@ -12,24 +12,22 @@ NOMBRE_ARCHIVO = "DaDiMAC_ExtraeCSV.csv"
 
 # Codificación segura del nombre del archivo para la API de Google Cloud
 ARCHIVO_CODIFICADO = urllib.parse.quote(NOMBRE_ARCHIVO, safe="")
+URL_FIREBASE_STORAGE = f"https://googleapis.com{BUCKET_NAME}/o/{ARCHIVO_CODIFICADO}?alt=media"
 
-# Construcción de la URL base oficial de descarga
-URL_FIREBASE_STORAGE = f"https://firebasestorage.googleapis.com/v0/b/{BUCKET_NAME}/o/{ARCHIVO_CODIFICADO}?alt=media"
-
-@st.cache_data(ttl=1800)  # Conserva en memoria RAM por 30 minutos para velocidad máxima
+@st.cache_data(ttl=1800)  # Mantiene la base de datos en caché por 30 minutos para máxima fluidez
 def cargar_datos_vivos_consolidados():
     """
-    Descarga el archivo analítico masivo de clics directamente desde la red 
-    interna de Firebase Storage a máxima velocidad.
+    Descarga el archivo analítico masivo de clics directamente desde Firebase Storage
+    y aplica un mapeo inteligente e inmune a variaciones de mayúsculas/minúsculas.
     """
     try:
-        # Petición HTTP directa al bucket de almacenamiento de tu proyecto
+        # Petición HTTP directa al bucket de almacenamiento liberado
         respuesta = requests.get(URL_FIREBASE_STORAGE, timeout=60)
         
         if respuesta.status_code == 200:
             objeto_memoria = io.StringIO(respuesta.text)
             
-            # Motor tolerante a fallos de líneas o comillas en Sage 50
+            # Motor robusto de lectura automática de separadores
             df = pd.read_csv(
                 objeto_memoria, 
                 sep=None, 
@@ -37,34 +35,44 @@ def cargar_datos_vivos_consolidados():
                 on_bad_lines='skip'
             )
             
-            if df.empty or len(df.columns) < 2:
+            if df.empty or len(df.columns) < 1:
                 return None
                 
-            # Limpieza estándar de impurezas en las cabeceras
-            df.columns = df.columns.str.replace('"', '').str.strip()
+            # Homologación total de columnas a minúsculas y sin impurezas para evitar descalces
+            df.columns = df.columns.str.replace('"', '').str.strip().str.lower()
             
-            # Mapeo y tipificación cronológica obligatoria de la línea temporal
-            if 'Date_Time' in df.columns:
-                df['Fecha_Hora'] = pd.to_datetime(df['Date_Time'], errors='coerce')
-            elif 'Fecha_Hora' in df.columns:
-                df['Fecha_Hora'] = pd.to_datetime(df['Fecha_Hora'], errors='coerce')
+            # 1. ESCÁNER INTELIGENTE DE LA LÍNEA TEMPORAL (FECHA Y HORA)
+            columnas_fecha = ['date_time', 'date', 'time', 'fecha_hora', 'fecha']
+            col_fecha_encontrada = None
+            
+            for col in columnas_fecha:
+                if col in df.columns:
+                    col_fecha_encontrada = col
+                    break
+                    
+            if col_fecha_encontrada:
+                df['Fecha_Hora'] = pd.to_datetime(df[col_fecha_encontrada], errors='coerce')
             else:
+                # Si las cabeceras fallan, tomamos la primera columna por defecto
                 df['Fecha_Hora'] = pd.to_datetime(df.iloc[:, 0], errors='coerce')
 
-            # Homologación estructural de variables para la interfaz interactiva
-            df['Compañía'] = df['CompanyName'] if 'CompanyName' in df.columns else (df['Compañía'] if 'Compañía' in df.columns else "Sin Compañía")
-            df['Usuario'] = df['UserID'] if 'UserID' in df.columns else (df['Usuario'] if 'Usuario' in df.columns else "Desconocido")
-            df['Monto'] = pd.to_numeric(df['MainAmt'], errors='coerce').fillna(0.0) if 'MainAmt' in df.columns else 0.0
-            df['Acción'] = df['EventAction'] if 'EventAction' in df.columns else "Clic"
-            df['Ventana_Detalle'] = df['WindowText'] if 'WindowText' in df.columns else ""
+            # 2. HOMOLOGACIÓN DE VARIABLES CONTABLES ADAPTATIVA
+            df['Compañía'] = df['companyname'] if 'companyname' in df.columns else (df['compañía'] if 'compañía' in df.columns else "Sin Compañía")
+            df['Usuario'] = df['userid'] if 'userid' in df.columns else (df['usuario'] if 'usuario' in df.columns else "Desconocido")
+            df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else (pd.to_numeric(df['monto'], errors='coerce').fillna(0.0) if 'monto' in df.columns else 0.0)
+            df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else (df['acción'] if 'acción' in df.columns else "Clic")
+            df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else (df['ventana_detalle'] if 'ventana_detalle' in df.columns else "")
 
-            # Depuración final de registros vacíos
-            df = df.dropna(subset=['Fecha_Hora'])
+            # Limpieza de nulos únicamente si la conversión falló drásticamente
+            if df['Fecha_Hora'].notna().sum() > 0:
+                df = df.dropna(subset=['Fecha_Hora'])
+            
+            # Ordenamiento cronológico de auditoría
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             
             return df
         else:
-            st.error(f"⚠️ Firebase Storage rechazó la descarga. Código HTTP: {respuesta.status_code}. Es muy probable que necesites ajustar las reglas de almacenamiento a modo lectura pública.")
+            st.error(f"⚠️ Firebase Storage rechazó la descarga. Código HTTP: {respuesta.status_code}")
             return None
             
     except Exception as e:
