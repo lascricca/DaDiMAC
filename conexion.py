@@ -95,7 +95,10 @@ def cargar_datos_vivos_consolidados():
             df['Usuario'] = df['userid'] if 'userid' in df.columns else (df['usuario'] if 'usuario' in df.columns else "Desconocido")
             df['Monto'] = pd.to_numeric(df['mainamt'], errors='coerce').fillna(0.0) if 'mainamt' in df.columns else 0.0
             df['Acción'] = df['eventaction'] if 'eventaction' in df.columns else "Clic"
-            df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else ""
+            #df['Ventana_Detalle'] = df['windowtext'] if 'windowtext' in df.columns else ""
+            # Mapea los datos de la columna original 'Description' (homologada a minúsculas)
+            df['Ventana_Detalle'] = df['description'] if 'description' in df.columns else ""
+
 
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             return df
