@@ -26,8 +26,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     if len(datos_horas) > 0:
         media_matematica = float(np.mean(datos_horas))
         desviacion_estandar = float(np.std(datos_horas))
-        if desviacion_estandar == 0: 
-            desviacion_estandar = 0.1
+        if desviacion_estandar == 0: desviacion_estandar = 0.1
             
         horas_int = int(media_matematica)
         minutos_int = int((media_matematica - horas_int) * 60)
@@ -41,7 +40,6 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     clics_madrugada = len(df_madrugada)
     porcentaje_madrugada = (clics_madrugada / total_movimientos_filtrados * 100) if total_movimientos_filtrados > 0 else 0.0
 
-    # Estilos CSS compactos para las métricas superiores
     st.markdown("""
         <style>
         [data-testid="stMetricValue"] { font-size: 24px !important; font-weight: bold; }
@@ -49,40 +47,73 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         </style>
     """, unsafe_allow_html=True)
 
-    # PORTADA DE KPIS UNIFICADA Y COMPACTA (Fila 1: Operación y Volumen)
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(label="🎯 Clics / Universo Total", value=f"{total_movimientos_filtrados:,}", delta=f"De {total_registros_globales:,} globales")
-    with col2:
-        st.metric(label="🏢 Empresas Activas", value=f"{companias_activas:,}")
-    with col3:
-        st.metric(label="👤 Usuarios Operadores", value=f"{usuarios_unicos:,}")
-    with col4:
-        st.metric(label="💰 Volumen Financiero", value=f"${suma_dinero_total:,.2f}")
+    with col1: st.metric(label="🎯 Clics / Universo Total", value=f"{total_movimientos_filtrados:,}", delta=f"De {total_registros_globales:,} globales")
+    with col2: st.metric(label="🏢 Empresas Activas", value=f"{companias_activas:,}")
+    with col3: st.metric(label="👤 Usuarios Operadores", value=f"{usuarios_unicos:,}")
+    with col4: st.metric(label="💰 Volumen Financiero", value=f"${suma_dinero_total:,.2f}")
 
-    # PORTADA DE KPIS UNIFICADA Y COMPACTA (Fila 2: Estadística y Seguridad)
     col5, col6, col7, col8 = st.columns(4)
-    with col5:
-        st.metric(label="🕒 Hora Pico Promedio", value=texto_hora_pico)
-    with col6:
-        st.metric(label="📊 Desviación Estándar", value=texto_desviacion)
-    with col7:
-        st.metric(label="🚨 Clics Nocturnos (00-06)", value=f"{clics_madrugada:,}", delta=f"{porcentaje_madrugada:.1f}% del total", delta_color="inverse")
+    with col5: st.metric(label="🕒 Hora Pico Promedio", value=texto_hora_pico)
+    with col6: st.metric(label="📊 Desviación Estándar", value=texto_desviacion)
+    with col7: st.metric(label="🚨 Clics Nocturnos (00-06)", value=f"{clics_madrugada:,}", delta=f"{porcentaje_madrugada:.1f}% del total", delta_color="inverse")
     with col8:
         variacion_porcentual = (desviacion_estandar / media_matematica * 100) if media_matematica > 0 else 0.0
         st.metric(label="📉 Coeficiente Variación", value=f"{variacion_porcentual:.1f}%")
 
     st.markdown("---")
     st.markdown("### 📈 Portada Analítica Avanzada (Horarios, Ránkings y Dinero)")
-    
-    # Filtro estricto para remover herramientas interactivas de Plotly que alteran el gráfico al tacto
-    botones_limpieza = [
-        'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 
-        'autoScale2d', 'resetScale2d', 'hoverClosestCartesian', 
-        'hoverCompareCartesian', 'toggleSpikelines', 'toImage'
-    ]
-    
-    # 1. Gráfico de Campana de Gauss
+
+    st.subheader("🏢 Distribución de Actividad por Firma")
+    top_companies = df_filtrado['Compañía'].value_counts().reset_index()
+    top_companies.columns = ['Compañía', 'Clics']
+    top10_comp = top_companies.head(10).sort_values(by='Clics', ascending=True)
+    fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics')
+    fig_top_comp.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
+    st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+
+    st.markdown("---")
+
+    st.subheader("👤 Rendimiento del Personal Contable")
+    top_users = df_filtrado['Usuario'].value_counts().reset_index()
+    top_users.columns = ['Usuario', 'Clics']
+    top10_user = top_users.head(10).sort_values(by='Clics', ascending=True)
+    fig_top_user = px.bar(top10_user, x='Clics', y='Usuario', orientation='h', title="Top 10 Usuarios Operativos", labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'}, color_discrete_sequence=['#FF4B4B'])
+    fig_top_user.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
+    st.plotly_chart(fig_top_user, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+
+    st.markdown("---")
+
+    if 'Monto' in df_filtrado.columns and df_filtrado['Monto'].sum() > 0:
+        st.subheader("💰 Distribución Financiera de Operaciones")
+        df_monetario = df_filtrado.groupby('Compañía')['Monto'].sum().reset_index()
+        df_monetario = df_monetario.sort_values(by='Monto', ascending=False).head(10)
+        fig_monetario = px.bar(df_monetario, x='Compañía', y='Monto', title="Volumen Monetario Total por Firma ($ MainAmt)", labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, text_auto='.2s', color_discrete_sequence=['#2CA02C'])
+        fig_monetario.update_layout(xaxis=dict(fixedrange=True, tickangle=-25), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40))
+        st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+        st.markdown("---")
+    # 4. NUEVA GRÁFICA DE LÍNEA: CLICS POR MES
+    st.subheader("📉 Evolución Cronológica del Esfuerzo Contable")
+    try:
+        df_linea = df_filtrado.copy()
+        df_linea['Mes_Periodo'] = df_linea['Fecha_Hora'].dt.to_period('M')
+        df_meses = df_linea.groupby('Mes_Periodo').size().reset_index(name='Cantidad_Clics')
+        df_meses['Mes_Texto'] = df_meses['Mes_Periodo'].astype(str)
+        df_meses = df_meses.sort_values(by='Mes_Periodo', ascending=True)
+
+        if not df_meses.empty:
+            fig_mensual = go.Figure()
+            fig_mensual.add_trace(go.Scatter(x=df_meses['Mes_Texto'], y=df_meses['Cantidad_Clics'], mode='lines+markers', name='Clics por Mes', line=dict(color='#17A2B8', width=3), marker=dict(size=8, color='#0F6A7A')))
+            fig_mensual.update_layout(title="Volumen Mensual Histórico de Clics Procesados en Sage", xaxis_title="Periodo Fiscal (Mes/Año)", yaxis_title="Cantidad Total de Clics", xaxis=dict(type='category', fixedrange=True), yaxis=dict(fixedrange=True, minallowed=0), hovermode=False, template="plotly_white", height=340, margin=dict(l=40, r=40, t=40, b=40))
+            st.plotly_chart(fig_mensual, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
+        else:
+            st.info("ℹ️ Datos temporales insuficientes para trazar la línea de tendencia.")
+    except Exception as e:
+        st.error(f"⚠️ Error en Análisis Mensual: {e}")
+
+    st.markdown("---")
+
+    # 5. CAMPANA DE GAUSS (REUBICADA AL FINAL ANTES DE LA TABLA)
     if len(datos_horas) > 5:
         try:
             eje_x_horas = np.linspace(0, 23.99, 500)
@@ -97,58 +128,16 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
             y_somb = pdf_gauss[(eje_x_horas >= lim_inf) & (eje_x_horas <= lim_sup)]
             
             fig_gauss.add_trace(go.Scatter(x=x_somb, y=y_somb, mode='none', fill='tozeroy', fillcolor='rgba(38, 120, 254, 0.25)', name='Zona Primaria (68% de los Clics)'))
-            
             fig_gauss.add_vline(x=media_matematica, line_width=2, line_dash="dash", line_color="#4A4A4A", annotation_text=f" Hora Pico ({texto_hora_pico})", annotation_position="top right")
             
-            fig_gauss.update_layout(
-                title="Distribución Horaria del Esfuerzo Laboral (Campana de Gauss)",
-                xaxis_title="Hora del Día (0:00 - 23:59 Hrs)", yaxis_title="Concentración (%)",
-                xaxis=dict(tickmode='array', tickvals=list(range(0, 25, 2)), range=[0, 23.99], fixedrange=True),
-                yaxis=dict(tickformat='.0%', minallowed=0, fixedrange=True),
-                hovermode=False, template="plotly_white", height=340, margin=dict(l=40, r=40, t=40, b=40), legend=dict(orientation="h", y=-0.25)
-            )
-            st.plotly_chart(fig_gauss, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
+            fig_gauss.update_layout(title="Distribución Horaria del Esfuerzo Laboral (Campana de Gauss)", xaxis_title="Hora del Día (0:00 - 23:59 Hrs)", yaxis_title="Concentración (%)", xaxis=dict(tickmode='array', tickvals=list(range(0, 25, 2)), range=[0, 23.99], fixedrange=True), yaxis=dict(tickformat='.0%', minallowed=0, fixedrange=True), hovermode=False, template="plotly_white", height=340, margin=dict(l=40, r=40, t=40, b=40), legend=dict(orientation="h", y=-0.25))
+            st.plotly_chart(fig_gauss, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         except Exception as e:
             st.error(f"⚠️ Error en Gauss: {e}")
 
     st.markdown("---")
 
-    # 2. Ránking de Compañías
-    st.subheader("🏢 Distribución de Actividad por Firma")
-    top_companies = df_filtrado['Compañía'].value_counts().reset_index()
-    top_companies.columns = ['Compañía', 'Clics']
-    top10_comp = top_companies.head(10).sort_values(by='Clics', ascending=True)
-    
-    fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics')
-    fig_top_comp.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
-    st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
-
-    st.markdown("---")
-
-    # 3. Ránking de Usuarios
-    st.subheader("👤 Rendimiento del Personal Contable")
-    top_users = df_filtrado['Usuario'].value_counts().reset_index()
-    top_users.columns = ['Usuario', 'Clics']
-    top10_user = top_users.head(10).sort_values(by='Clics', ascending=True)
-    
-    fig_top_user = px.bar(top10_user, x='Clics', y='Usuario', orientation='h', title="Top 10 Usuarios Operativos", labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'}, color_discrete_sequence=['#FF4B4B'])
-    fig_top_user.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
-    st.plotly_chart(fig_top_user, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
-
-    st.markdown("---")
-
-    # 4. Gráfico de volumen financiero MainAmt
-    if 'Monto' in df_filtrado.columns and df_filtrado['Monto'].sum() > 0:
-        st.subheader("💰 Distribución Financiera de Operaciones")
-        df_monetario = df_filtrado.groupby('Compañía')['Monto'].sum().reset_index()
-        df_monetario = df_monetario.sort_values(by='Monto', ascending=False).head(10)
-        
-        fig_monetario = px.bar(df_monetario, x='Compañía', y='Monto', title="Volumen Monetario Total por Firma ($ MainAmt)", labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, text_auto='.2s', color_discrete_sequence=['#2CA02C'])
-        fig_monetario.update_layout(xaxis=dict(fixedrange=True, tickangle=-25), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40))
-        st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': True, 'displaylogo': False, 'modeBarButtonsToRemove': botones_limpieza})
-        st.markdown("---")
-
-    # 5. TABLA INTERACTIVA DE DATOS AL FINAL DE LA CASCADA
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
     
