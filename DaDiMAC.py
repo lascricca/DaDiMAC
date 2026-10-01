@@ -21,8 +21,8 @@ if usuarios.login_sidebar():
     col_titulo, col_logo = st.columns([0.85, 0.15])
     
     with col_titulo:
-        # REEMPLAZA EL TEXTO ENTRE COMILLAS POR EL TÍTULO EXACTO QUE YA TIENES EN TU PROGRAMA
-        st.title("Dashboard de Auditoría DaDiMAC - Cloud") 
+        # Usamos st.subheader para reducir drásticamente el tamaño de las letras grandes
+        st.subheader("Dashboard de Auditoría DaDiMAC - Cloud")
     
     with col_logo:
         # Inserta el logo a un tamaño compacto de 52 píxeles alineado con el encabezado
