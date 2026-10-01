@@ -21,6 +21,16 @@ if usuarios.login_sidebar():
 
         
     if df_completo is not None and not df_completo.empty:
+
+        # =====================================================================
+        # ENCABEZADO DE LA BARRA LATERAL: LOGO DE LA MARCA
+        # =====================================================================
+        # Si tienes el archivo guardado en tu repositorio de GitHub, usa el nombre del archivo:
+        st.sidebar.image("LOGO LASA.gif", use_container_width=True)
+        
+        # NOTA: Si prefieres cargarlo desde una dirección web (URL pública), 
+        # puedes reemplazar el texto anterior por el enlace directo entre comillas.
+
         
         # --- FILTRO 1: MULTISELECTOR MÁSTER POR EMPRESA ---
         st.sidebar.header("🏢 1. Filtro por Empresa")
