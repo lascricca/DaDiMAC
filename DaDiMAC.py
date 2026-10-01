@@ -11,9 +11,23 @@ import usuarios  # Módulo de Autenticación con Firebase
 # Configuración inicial de la interfaz
 st.set_page_config(page_title="Dashboard DaDiMAC", layout="wide", initial_sidebar_state="expanded")
 
+
 # Bloqueo Máster de Seguridad con Firebase Auth
 if usuarios.login_sidebar():
-    st.title("🚀 Bars Dashboard DaDiMAC — Infraestructura Cloud")
+    # =====================================================================
+    # ENCABEZADO DEL DASHBOARD: TÍTULO Y LOGO DE LA MARCA COALINEADOS
+    # =====================================================================
+    # Creamos dos columnas: 85% para el título y 15% para el logo de la marca
+    col_titulo, col_logo = st.columns([0.85, 0.15])
+    
+    with col_titulo:
+        # REEMPLAZA EL TEXTO ENTRE COMILLAS POR EL TÍTULO EXACTO QUE YA TIENES EN TU PROGRAMA
+        st.title("Dashboard de Auditoría DaDiMAC - Cloud") 
+    
+    with col_logo:
+        # Inserta el logo a un tamaño compacto de 52 píxeles alineado con el encabezado
+        st.image("image_2FwtZh.png", width=156, use_container_width=False)
+    
     st.info(f"☁️ **Modo Servidor Cloud Activo** | Consultor: {st.session_state.usuario_email}")
 
     # PASO 1: Carga instantánea de la base unificada en memoria caché
