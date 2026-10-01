@@ -115,13 +115,14 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
                 title="Distribución Horaria del Esfuerzo Laboral (Campana de Gauss)",
                 xaxis_title="Hora del Día (0:00 - 23:59 Hrs)",
                 yaxis_title="Concentración (%)",
-                xaxis=dict(tickmode='array', tickvals=list(range(0, 25, 2)), range=[0, 23.99]),
-                yaxis=dict(tickformat='.0%', minallowed=0),
+                xaxis=dict(tickmode='array', tickvals=list(range(0, 25, 2)), range=[0, 23.99], fixedrange=True),
+                yaxis=dict(tickformat='.0%', minallowed=0, fixedrange=True),
+                hovermode=False,
                 template="plotly_white", height=340,
                 margin=dict(l=40, r=40, t=40, b=40),
                 legend=dict(orientation="h", y=-0.25)
             )
-            st.plotly_chart(fig_gauss, use_container_width=True)
+            st.plotly_chart(fig_gauss, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         except Exception as e:
             st.error(f"⚠️ Error en Gauss: {e}")
 
@@ -139,8 +140,13 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'},
         color_continuous_scale='Blues', color='Clics'
     )
-    fig_top_comp.update_layout(template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
-    st.plotly_chart(fig_top_comp, use_container_width=True)
+    fig_top_comp.update_layout(
+        xaxis=dict(fixedrange=True),
+        yaxis=dict(fixedrange=True),
+        hovermode=False,
+        template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False
+    )
+    st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
 
     st.markdown("---")
 
@@ -156,8 +162,13 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'},
         color_discrete_sequence=['#FF4B4B']
     )
-    fig_top_user.update_layout(template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
-    st.plotly_chart(fig_top_user, use_container_width=True)
+    fig_top_user.update_layout(
+        xaxis=dict(fixedrange=True),
+        yaxis=dict(fixedrange=True),
+        hovermode=False,
+        template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20)
+    )
+    st.plotly_chart(fig_top_user, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
 
     st.markdown("---")
 
@@ -173,11 +184,16 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
             labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'},
             text_auto='.2s', color_discrete_sequence=['#2CA02C']
         )
-        fig_monetario.update_layout(template="plotly_white", xaxis_tickangle=-25, height=380, margin=dict(l=20, r=20, t=40, b=40))
-        st.plotly_chart(fig_monetario, use_container_width=True)
+        fig_monetario.update_layout(
+            xaxis=dict(fixedrange=True, tickangle=-25),
+            yaxis=dict(fixedrange=True),
+            hovermode=False,
+            template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40)
+        )
+        st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         st.markdown("---")
 
-    # 5. INYECCIÓN MÁSTER: TABLA INTERACTIVA DE DATOS AL FINAL DE LA CASCADA
+    # 5. TABLA INTERACTIVA DE DATOS AL FINAL DE LA CASCADA
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones específicas:")
     
