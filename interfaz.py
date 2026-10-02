@@ -64,65 +64,51 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     st.markdown("---")
     st.markdown("### 📈 Portada Analítica Avanzada (Horarios, Ránkings y Dinero)")
 
+    # =====================================================================
+    # GRÁFICO SELECCIONADO: VALORES EN AMARILLO DENTRO DE LAS BARRAS
+    # =====================================================================
     st.subheader("🏢 Distribución de Actividad por Firma")
     top_companies = df_filtrado['Compañía'].value_counts().reset_index()
     top_companies.columns = ['Compañía', 'Clics']
     top10_comp = top_companies.head(10).sort_values(by='Clics', ascending=True)
     
-    fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics', text_auto=True)
+    top10_comp['Texto_Clics'] = top10_comp['Clics'].map(lambda x: f"{x:,}")
+    fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics', text='Texto_Clics')
     fig_top_comp.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
-    # textposition='inside' fuerza a que los números se superpongan en el interior de la barra
-    fig_top_comp.update_traces(textposition='inside', textfont=dict(color='white', size=12, weight='bold'), cliponaxis=False)
+    # CORRECCIÓN EN CALIENTE: textposition='inside' y color amarillo fuerte solo aquí
+    fig_top_comp.update_traces(textposition='inside', textfont=dict(color='#FFD700', size=12, weight='bold'), cliponaxis=False)
     st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
 
     st.markdown("---")
 
+    # Personal Contable (Se mantiene en blanco clásico como estaba originalmente)
     st.subheader("👤 Rendimiento del Personal Contable")
     top_users = df_filtrado['Usuario'].value_counts().reset_index()
     top_users.columns = ['Usuario', 'Clics']
     top10_user = top_users.head(10).sort_values(by='Clics', ascending=True)
     
-    fig_top_user = px.bar(top10_user, x='Clics', y='Usuario', orientation='h', title="Top 10 Usuarios Operativos", labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'}, color_discrete_sequence=['#FF4B4B'], text_auto=True)
+    top10_user['Texto_Clics'] = top10_user['Clics'].map(lambda x: f"{x:,}")
+    fig_top_user = px.bar(top10_user, x='Clics', y='Usuario', orientation='h', title="Top 10 Usuarios Operativos", labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'}, color_discrete_sequence=['#FF4B4B'], text='Texto_Clics')
     fig_top_user.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
     fig_top_user.update_traces(textposition='inside', textfont=dict(color='white', size=12, weight='bold'), cliponaxis=False)
     st.plotly_chart(fig_top_user, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
 
     st.markdown("---")
 
-    # 3. Gráfico de volumen financiero MainAmt (ETIQUETAS OPTIMIZADAS ENCIMA DE LA BARRA)
     if 'Monto' in df_filtrado.columns and df_filtrado['Monto'].sum() > 0:
         st.subheader("💰 Distribución Financiera de Operaciones")
         df_monetario = df_filtrado.groupby('Compañía')['Monto'].sum().reset_index()
         df_monetario = df_monetario.sort_values(by='Monto', ascending=False).head(10)
         
-        # El parámetro text_auto='.2s' formatea de forma ejecutiva los millones (M) y miles (k)
-        fig_monetario = px.bar(
-            df_monetario, x='Compañía', y='Monto', 
-            title="Volumen Monetario Total por Firma ($ MainAmt)", 
-            labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, 
-            text_auto='.2s', 
-            color_discrete_sequence=['#2CA02C']
-        )
-        
-        fig_monetario.update_layout(
-            xaxis=dict(fixedrange=True, tickangle=-25), 
-            yaxis=dict(fixedrange=True), 
-            hovermode=False, 
-            template="plotly_white", 
-            height=380, 
-            margin=dict(l=20, r=20, t=40, b=40)
-        )
-        
-        # INYECCIÓN MÁSTER DE CONTRASTE: Fuerza la posición externa del texto en color blanco e incrementa el tamaño
-        fig_monetario.update_traces(
-            textposition='outside', 
-            textfont=dict(color='white', size=13, weight='bold'), 
-            cliponaxis=False
-        )
-        
+        df_monetario['Texto_Monto'] = df_monetario['Monto'].map(lambda x: f"${x:,.2f}")
+        fig_monetario = px.bar(df_monetario, x='Compañía', y='Monto', title="Volumen Monetario Total por Firma ($ MainAmt)", labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, text='Texto_Monto')
+        fig_monetario.update_layout(xaxis=dict(fixedrange=True, tickangle=-25), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40))
+        # Se mantienen los textos externos de escala baja
+        fig_monetario.update_traces(textposition='outside', textfont=dict(color='white', size=11, weight='bold'), cliponaxis=False, marker_color='#2CA02C')
         st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         st.markdown("---")
-    # 4. GRÁFICA DE LÍNEA: CLICS POR MES CON TEXTO SUPERPUESTO FIJO
+
+    # 4. GRÁFICA DE LÍNEA: CLICS POR MES
     st.subheader("📉 Evolución Cronológica del Esfuerzo Contable")
     try:
         df_linea = df_filtrado.copy()
@@ -133,7 +119,6 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
         if not df_meses.empty:
             fig_mensual = go.Figure()
-            # Agregamos los puntos y líneas de la tendencia
             fig_mensual.add_trace(go.Scatter(
                 x=df_meses['Mes_Texto'], 
                 y=df_meses['Cantidad_Clics'], 
@@ -143,16 +128,15 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
                 marker=dict(size=10, color='#0F6A7A')
             ))
             
-            # CONTROL DE SOBREPOSICIÓN: Inyectamos anotaciones individuales para cada nodo mensual
             anotaciones_nodos = []
             for k, fila in df_meses.iterrows():
                 anotaciones_nodos.append(dict(
                     x=fila['Mes_Texto'],
                     y=fila['Cantidad_Clics'],
-                    text=f"{fila['Cantidad_Clics']:,}", # Formato con coma de miles
-                    font=dict(color='#0F6A7A', size=11, weight='bold'),
+                    text=f"{fila['Cantidad_Clics']:,}", 
+                    font=dict(color='white', size=11, weight='bold'),
                     showarrow=False,
-                    yshift=14 # Eleva verticalmente el texto exactamente arriba del punto
+                    yshift=14 
                 ))
             
             fig_mensual.update_layout(
@@ -165,7 +149,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
                 template="plotly_white", 
                 height=340, 
                 margin=dict(l=40, r=40, t=40, b=40),
-                annotations=anotaciones_nodos # Aplica los valores fijos al lienzo
+                annotations=anotaciones_nodos 
             )
             st.plotly_chart(fig_mensual, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         else:
