@@ -58,27 +58,19 @@ if usuarios.login_sidebar():
         # puedes reemplazar el texto anterior por el enlace directo entre comillas.
 
         
-        # --- FILTRO 1: MULTISELECTOR MÁSTER POR EMPRESA ---
+        # --- FILTRO 1: MULTISELECTOR MÁSTER POR EMPRESA (INTERFAZ OPTIMIZADA)
         st.sidebar.header("🏢 1. Filtro por Empresa")
         lista_companias_disponibles = sorted(df_completo['Compañía'].unique())
         
-        if "todas_empresas" not in st.session_state:
-            st.session_state.todas_empresas = False
-
-        if st.sidebar.button("📦 Seleccionar Todas las Compañías"):
-            st.session_state.todas_empresas = True
-            st.rerun()
-        if st.sidebar.button("🧹 Limpiar Selección"):
-            st.session_state.todas_empresas = False
-            st.rerun()
-
-        valores_defecto_emp = lista_companias_disponibles if st.session_state.todas_empresas else [lista_companias_disponibles[0]]
+        # Por defecto cargamos la primera compañía para mantener la UI activa de forma elegante
+        valores_defecto_emp = [lista_companias_disponibles[0]] if lista_companias_disponibles else []
 
         companias_seleccionadas = st.sidebar.multiselect(
             "Selecciona empresas a evaluar:",
             options=lista_companias_disponibles,
             default=valores_defecto_emp
         )
+
         
         if not companias_seleccionadas:
             st.warning("⚠️ Selecciona al menos una empresa contable en la barra lateral.")
