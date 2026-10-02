@@ -134,3 +134,8 @@ else:
     # Mensaje elegante cuando la aplicación está totalmente bloqueada en la nube
     st.title("🔒 Plataforma de Auditoría Contable DaDiMAC")
     st.info("Introduce tus credenciales autorizadas en el panel izquierdo para acceder. Si es tu primera vez o perdiste tu acceso, puedes registrarte o usar el botón de restablecimiento automático.")
+    # =====================================================================
+    # INYECCIÓN DE FONDO DE PANTALLA EXCLUSIVO DESDE TU REPOSITORIO GITHUB
+    # =====================================================================
+    # Se jala la imagen cruda directamente desde tu repositorio principal DaDiMAC
+    URL_FONDO_GITHUB = "https://githubusercontent.com"
