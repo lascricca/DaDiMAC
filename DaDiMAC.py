@@ -128,30 +128,35 @@ else:
     # =====================================================================
     # 1. ACCIÓN PRIORITARIA: INYECTAR EL FONDO DE IMAGEN INMEDIATAMENTE
     # =====================================================================
-    URL_FONDO_GITHUB = "https://github.com" 
+else:
+    # =====================================================================
+    # CORRECCIÓN EN CALIENTE: URL RAW PURA DE GITHUB CON REFUERZO CSS
+    # =====================================================================
+    URL_FONDO_GITHUB = "https://githubusercontent.com"
     
     st.markdown(
         f"""
         <style>
         .stApp {{
-            background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("{URL_FONDO_GITHUB}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("{URL_FONDO_GITHUB}") !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
         }}
         /* Estilización de los inputs de la barra de login para alto contraste */
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
         [data-testid="stSidebar"] label {{
             color: #FFFFFF !important;
             font-weight: bold !important;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8) !important;
         }}
         </style>
         """,
         unsafe_allow_html=True
     )
 
+    # Mensaje elegante cuando la aplicación está totalmente bloqueada en la nube
     # =====================================================================
     # 2. RENDERIZADO VISUAL DEL TEXTO (SOBRE EL FONDO YA CARGADO)
     # =====================================================================
