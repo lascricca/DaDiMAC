@@ -131,10 +131,17 @@ else:
     import base64
     import os
 
+    # 1. Procesamiento en memoria de la imagen de fondo
     img_base64 = ""
     if os.path.exists("Ejecutivos.jpg"):
         with open("Ejecutivos.jpg", "rb") as image_file:
             img_base64 = base64.b64encode(image_file.read()).decode()
+
+    # 2. Procesamiento en memoria del logotipo corporativo
+    logo_base64 = ""
+    if os.path.exists("LOGO MAC.jpeg"):
+        with open("LOGO MAC.jpeg", "rb") as logo_file:
+            logo_base64 = base64.b64encode(logo_file.read()).decode()
 
     if img_base64:
         st.markdown(
@@ -159,10 +166,16 @@ else:
         )
 
     # =====================================================================
-    # INTERFAZ DE BIENVENIDA CONSTRUIDA EN LÍNEA ÚNICA (EVITA ERRORES EN LA NUBE)
+    # INTERFAZ DE BIENVENIDA EN LÍNEA ÚNICA CON LOGO LOCAL PROTEGIDO
     # =====================================================================
     html_logo = '<div style="display: flex; flex-direction: column; align-items: center; margin-top: 40px; width: 100%;">'
-    html_logo += '<img src="https://githubusercontent.com" style="width: 130px; height: auto; border-radius: 12px; box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.25); margin-bottom: -20px; z-index: 10; background-color: #FFFFFF; padding: 5px;">'
+    
+    # Inyectamos el logo local si se leyó de forma correcta desde tu repositorio
+    if logo_base64:
+        html_logo += f'<img src="data:image/jpeg;base64,{logo_base64}" style="width: 130px; height: auto; border-radius: 12px; box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.25); margin-bottom: -20px; z-index: 10; background-color: #FFFFFF; padding: 5px;">'
+    else:
+        # Respaldo en caso de que el archivo tenga extensión .jpg en minúsculas en tu repositorio
+        html_logo += '<div style="margin-bottom: -20px; z-index: 10;"></div>'
     
     html_cuerpo = '<div style="background-color: rgba(255, 255, 255, 0.88); padding: 45px 35px 35px 35px; border-radius: 12px; border-top: 5px solid #2678FE; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3); width: 100%; max-width: 850px; z-index: 1;">'
     html_cuerpo += '<details style="cursor: pointer; outline: none;">'
@@ -177,7 +190,6 @@ else:
     html_texto += 'o usar el botón de restablecimiento automático provisto por el sistema.'
     html_texto += '</p></details></div></div>'
 
-    # Unimos todas las partes de la cadena limpia en una sola ejecución máster
-    diseno_final_html = html_logo + html_logo_img + html_cuerpo + html_texto if 'html_logo_img' in locals() else html_logo + html_cuerpo + html_texto
+    diseno_final_html = html_logo + html_cuerpo + html_texto
     
     st.markdown(diseno_final_html, unsafe_allow_html=True)
