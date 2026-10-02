@@ -175,54 +175,79 @@ else:
     # =====================================================================
     # CONTENEDOR BLANCO CON TEXTO DESPLEGABLE A PETICIÓN (MENÚ OCULTO)
     # =====================================================================
+    # =====================================================================
+    # LOGOTIPO FLOTANTE CENTRADO Y CONTENEDOR BLANCO INTERACTIVO
+    # =====================================================================
     st.markdown(
         """
         <div style="
-            background-color: rgba(255, 255, 255, 0.88);
-            padding: 35px;
-            border-radius: 12px;
-            border-left: 6px solid #2678FE;
-            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3);
-            margin-top: 50px;
-            max-width: 850px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 40px;
+            width: 100%;
         ">
-            <details style="cursor: pointer; outline: none;">
-                <summary style="
-                    list-style: none;
-                    display: flex;
-                    align-items: center;
-                    color: #1E1E1E;
-                    font-size: 32px;
-                    font-weight: bold;
-                    font-family: 'Source Sans Pro', sans-serif;
-                ">
-                    🔒 Plataforma de Auditoría Contable DaDiMAC 
-                    <span style="
-                        margin-left: 15px; 
-                        font-size: 22px; 
-                        color: #2678FE; 
-                        background-color: rgba(38, 120, 254, 0.1); 
-                        padding: 2px 10px; 
-                        border-radius: 20px;
-                        font-weight: normal;
-                    ">ℹ️ Ver guía</span>
-                </summary>
-                <p style="
-                    color: #2F3E46;
-                    font-size: 16px;
-                    line-height: 1.6;
-                    margin-top: 20px;
-                    margin-bottom: 0;
-                    padding-top: 15px;
-                    border-top: 1px dashed rgba(0, 0, 0, 0.1);
-                    font-family: 'Source Sans Pro', sans-serif;
-                    cursor: default;
-                ">
-                    Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. 
-                    Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro 
-                    o usar el botón de restablecimiento automático provisto por el sistema.
-                </p>
-            </details>
+            <!-- Logotipo Flotante Centrado -->
+            <img src="https://githubusercontent.com" style="
+                width: 130px;
+                height: auto;
+                border-radius: 12px;
+                box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.25);
+                margin-bottom: -20px;
+                z-index: 10;
+                background-color: #FFFFFF;
+                padding: 5px;
+            ">
+
+            <!-- Contenedor Blanco Principal -->
+            <div style="
+                background-color: rgba(255, 255, 255, 0.88);
+                padding: 45px 35px 35px 35px;
+                border-radius: 12px;
+                border-top: 5px solid #2678FE;
+                box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3);
+                width: 100%;
+                max-width: 850px;
+                z-index: 1;
+            ">
+                <details style="cursor: pointer; outline: none;">
+                    <summary style="
+                        list-style: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        color: #1E1E1E;
+                        font-size: 28px;
+                        font-weight: bold;
+                        font-family: 'Source Sans Pro', sans-serif;
+                    ">
+                        <span>🔒 Plataforma de Auditoría Contable DaDiMAC</span>
+                        <span style="
+                            font-size: 15px; 
+                            color: #2678FE; 
+                            background-color: rgba(38, 120, 254, 0.1); 
+                            padding: 4px 12px; 
+                            border-radius: 20px;
+                            font-weight: bold;
+                        ">ℹ️ Ver guía</span>
+                    </summary>
+                    <p style="
+                        color: #2F3E46;
+                        font-size: 16px;
+                        line-height: 1.6;
+                        margin-top: 20px;
+                        margin-bottom: 0;
+                        padding-top: 15px;
+                        border-top: 1px dashed rgba(0, 0, 0, 0.1);
+                        font-family: 'Source Sans Pro', sans-serif;
+                        cursor: default;
+                    ">
+                        Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. 
+                        Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro 
+                        o usar el botón de restablecimiento automático provisto por el sistema.
+                    </p>
+                </details>
+            </div>
         </div>
         """,
         unsafe_allow_html=True
