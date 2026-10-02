@@ -188,7 +188,7 @@ else:
             width: 100%;
         ">
             <!-- Logotipo Flotante Centrado -->
-            <img src="https://githubusercontent.com" style="
+            <img src="https://github.com/lascricca/DaDiMAC/blob/main/LOGO%20MAC.jpeg?raw=true" style="
                 width: 130px;
                 height: auto;
                 border-radius: 12px;
