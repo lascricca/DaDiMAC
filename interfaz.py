@@ -68,8 +68,10 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     top_companies = df_filtrado['Compañía'].value_counts().reset_index()
     top_companies.columns = ['Compañía', 'Clics']
     top10_comp = top_companies.head(10).sort_values(by='Clics', ascending=True)
-    fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics')
+    # text_auto=True activa las etiquetas en las barras
+    fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics', text_auto=True)
     fig_top_comp.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
+    fig_top_comp.update_traces(textposition='outside') # Coloca el valor fuera de la barra
     st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
 
     st.markdown("---")
@@ -78,8 +80,9 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     top_users = df_filtrado['Usuario'].value_counts().reset_index()
     top_users.columns = ['Usuario', 'Clics']
     top10_user = top_users.head(10).sort_values(by='Clics', ascending=True)
-    fig_top_user = px.bar(top10_user, x='Clics', y='Usuario', orientation='h', title="Top 10 Usuarios Operativos", labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'}, color_discrete_sequence=['#FF4B4B'])
+    fig_top_user = px.bar(top10_user, x='Clics', y='Usuario', orientation='h', title="Top 10 Usuarios Operativos", labels={'Clics': 'Cantidad de Movimientos', 'Usuario': 'Identificador de Operador'}, color_discrete_sequence=['#FF4B4B'], text_auto=True)
     fig_top_user.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
+    fig_top_user.update_traces(textposition='outside')
     st.plotly_chart(fig_top_user, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
 
     st.markdown("---")
@@ -90,9 +93,10 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         df_monetario = df_monetario.sort_values(by='Monto', ascending=False).head(10)
         fig_monetario = px.bar(df_monetario, x='Compañía', y='Monto', title="Volumen Monetario Total por Firma ($ MainAmt)", labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, text_auto='.2s', color_discrete_sequence=['#2CA02C'])
         fig_monetario.update_layout(xaxis=dict(fixedrange=True, tickangle=-25), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40))
+        fig_monetario.update_traces(textposition='outside')
         st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         st.markdown("---")
-    # 4. NUEVA GRÁFICA DE LÍNEA: CLICS POR MES
+    # 4. GRÁFICA DE LÍNEA: CLICS POR MES CON VALORES INCLUIDOS
     st.subheader("📉 Evolución Cronológica del Esfuerzo Contable")
     try:
         df_linea = df_filtrado.copy()
@@ -103,7 +107,17 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
         if not df_meses.empty:
             fig_mensual = go.Figure()
-            fig_mensual.add_trace(go.Scatter(x=df_meses['Mes_Texto'], y=df_meses['Cantidad_Clics'], mode='lines+markers', name='Clics por Mes', line=dict(color='#17A2B8', width=3), marker=dict(size=8, color='#0F6A7A')))
+            # mode='lines+markers+text' y text=... dibuja el número encima de cada mes
+            fig_mensual.add_trace(go.Scatter(
+                x=df_meses['Mes_Texto'], 
+                y=df_meses['Cantidad_Clics'], 
+                mode='lines+markers+text', 
+                name='Clics por Mes', 
+                text=df_meses['Cantidad_Clics'],
+                textposition="top center",
+                line=dict(color='#17A2B8', width=3), 
+                marker=dict(size=8, color='#0F6A7A')
+            ))
             fig_mensual.update_layout(title="Volumen Mensual Histórico de Clics Procesados en Sage", xaxis_title="Periodo Fiscal (Mes/Año)", yaxis_title="Cantidad Total de Clics", xaxis=dict(type='category', fixedrange=True), yaxis=dict(fixedrange=True, minallowed=0), hovermode=False, template="plotly_white", height=340, margin=dict(l=40, r=40, t=40, b=40))
             st.plotly_chart(fig_mensual, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         else:
@@ -113,7 +127,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # 5. CAMPANA DE GAUSS (REUBICADA AL FINAL ANTES DE LA TABLA)
+    # 5. CAMPANA DE GAUSS 
     if len(datos_horas) > 5:
         try:
             eje_x_horas = np.linspace(0, 23.99, 500)
@@ -137,33 +151,17 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (CON COLUMNA REFERENCIA INCLUIDA)
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
     
-    # Creamos una copia limpia para manipular la estructura
-    df_tabla_final = df_filtrado.copy()
-    
-    # CONTROL DE FUERZA BRUTA: Mapeamos Description o windowtext si la anterior falló por caché
-    if 'description' in df_tabla_final.columns:
-        df_tabla_final['Tipo de Clic'] = df_tabla_final['description']
-    elif 'windowtext' in df_tabla_final.columns:
-        df_tabla_final['Tipo de Clic'] = df_tabla_final['windowtext']
-    else:
-        df_tabla_final['Tipo de Clic'] = ""
-
-    if 'Ventana_Detalle' in df_tabla_final.columns and df_tabla_final['Tipo de Clic'].isna().all():
-        df_tabla_final['Tipo de Clic'] = df_tabla_final['Ventana_Detalle']
-
-    # DEFINICIÓN SECUENCIAL: Ubicamos 'Referencia' exactamente después de 'Monto'
-    columnas_tabla = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Referencia', 'Tipo de Clic']
-    df_tabla_interactiva = df_tabla_final[[c for c in columnas_tabla if c in df_tabla_final.columns]].copy()
+    columnas_visibles = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Ventana_Detalle']
+    df_tabla_interactiva = df_filtrado[[c for c in columnas_visibles if c in df_filtrado.columns]].copy()
     
     if not df_tabla_interactiva.empty:
         df_tabla_interactiva['Fecha_Hora'] = df_tabla_interactiva['Fecha_Hora'].dt.strftime('%Y-%m-%d %H:%M:%S')
         if 'Monto' in df_tabla_interactiva.columns:
             df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
-            
         st.dataframe(df_tabla_interactiva, use_container_width=True, hide_index=True)
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
