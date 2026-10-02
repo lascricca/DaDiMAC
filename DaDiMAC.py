@@ -132,7 +132,7 @@ else:
     # =====================================================================
     # CORRECCIÓN EN CALIENTE: URL RAW PURA DE GITHUB CON REFUERZO CSS
     # =====================================================================
-    URL_FONDO_GITHUB = "https://githubusercontent.com"
+    URL_FONDO_GITHUB = "https://github.com/lascricca/DaDiMAC/blob/main/Ejecutivos.jpg?raw=true"
     
     st.markdown(
         f"""
