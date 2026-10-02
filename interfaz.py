@@ -62,12 +62,12 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         st.metric(label="📉 Coeficiente Variación", value=f"{variacion_porcentual:.1f}%")
 
     st.markdown("---")
-    st.markdown("### 📈 Portada Analítica Avanzada (Horarios, Ránkings y Dinero)")
+    #st.markdown("### 📈 Portada Analítica Avanzada (Horarios, Ránkings y Dinero)")
 
     # =====================================================================
     # GRÁFICO SELECCIONADO: VALORES EN AMARILLO DENTRO DE LAS BARRAS
     # =====================================================================
-    st.subheader("🏢 Distribución de Actividad por Firma")
+    st.subheader("🏢 Distribución de Actividad por Empresa")
     top_companies = df_filtrado['Compañía'].value_counts().reset_index()
     top_companies.columns = ['Compañía', 'Clics']
     top10_comp = top_companies.head(10).sort_values(by='Clics', ascending=True)
