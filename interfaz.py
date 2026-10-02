@@ -63,9 +63,6 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # =====================================================================
-    # GRÁFICO SELECCIONADO: VALORES EN ROJO DENTRO DE LAS BARRAS
-    # =====================================================================
     st.subheader("🏢 Distribución de Actividad por Empresa")
     top_companies = df_filtrado['Compañía'].value_counts().reset_index()
     top_companies.columns = ['Compañía', 'Clics']
@@ -155,11 +152,8 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # =====================================================================
-    # 5. CAMPANA DE GAUSS CON TÍTULO HOMOLOGADO A SUBHEADER DE STREAMLIT
-    # =====================================================================
+    # 5. CAMPANA DE GAUSS 
     if len(datos_horas) > 5:
-        # Título optimizado en tamaño y jerarquía visual nativa
         st.subheader("🕒 Distribución Horaria del Esfuerzo Laboral (Campana de Gauss)")
         try:
             eje_x_horas = np.linspace(0, 23.99, 500)
@@ -176,7 +170,6 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
             fig_gauss.add_trace(go.Scatter(x=x_somb, y=y_somb, mode='none', fill='tozeroy', fillcolor='rgba(38, 120, 254, 0.25)', name='Zona Primaria (68% de los Clics)'))
             fig_gauss.add_vline(x=media_matematica, line_width=2, line_dash="dash", line_color="#4A4A4A", annotation_text=f" Hora Pico ({texto_hora_pico})", annotation_position="top right")
             
-            # Se eliminó la propiedad title interna para evitar duplicidades tipográficas
             fig_gauss.update_layout(xaxis_title="Hora del Día (0:00 - 23:59 Hrs)", yaxis_title="Concentración (%)", xaxis=dict(tickmode='array', tickvals=list(range(0, 25, 2)), range=[0, 23.99], fixedrange=True), yaxis=dict(tickformat='.0%', minallowed=0, fixedrange=True), hovermode=False, template="plotly_white", height=340, margin=dict(l=40, r=40, t=40, b=40), legend=dict(orientation="h", y=-0.25))
             st.plotly_chart(fig_gauss, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         except Exception as e:
@@ -184,11 +177,14 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA
+    # =====================================================================
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (CON REFERENCIA REINTEGRADA)
+    # =====================================================================
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
     
-    columnas_visibles = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Ventana_Detalle']
+    # REINCORPORACIÓN SECUENCIAL: Ubicamos 'Referencia' exactamente después de 'Monto'
+    columnas_visibles = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Referencia', 'Ventana_Detalle']
     df_tabla_interactiva = df_filtrado[[c for c in columnas_visibles if c in df_filtrado.columns]].copy()
     
     if not df_tabla_interactiva.empty:
