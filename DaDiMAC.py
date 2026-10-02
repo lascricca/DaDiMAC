@@ -134,7 +134,7 @@ else:
     # INYECCIÓN DE FONDO DE PANTALLA EXCLUSIVO DESDE TU REPOSITORIO GITHUB
     # =====================================================================
     # URL Cruda corregida con el subdominio 'raw' para lectura directa de Streamlit
-    URL_FONDO_GITHUB = "https://githubusercontent.com"
+    URL_FONDO_GITHUB = "https://github.com/lascricca/DaDiMAC/blob/main/Ejecutivos.jpg?raw=true" 
     
     st.markdown(
         f"""
