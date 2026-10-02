@@ -137,27 +137,22 @@ else:
     import base64
     import os
 
-    # Inicializamos una variable de fondo vacía para evitar caídas en el script
     img_base64 = ""
-    
-    # Buscamos el archivo físico 'Ejecutivos.jpg' dentro de tu repositorio local
     if os.path.exists("Ejecutivos.jpg"):
         with open("Ejecutivos.jpg", "rb") as image_file:
             img_base64 = base64.b64encode(image_file.read()).decode()
 
-    # Si el archivo existe en la raíz, inyectamos los bytes nativos en el CSS
     if img_base64:
         st.markdown(
             f"""
             <style>
             .stApp {{
-                background-image: linear-gradient(rgba(0, 0, 0, 0.40), rgba(0, 0, 0, 0.40)), url("data:image/jpg;base64,{img_base64}") !important;
+                background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("data:image/jpg;base64,{img_base64}") !important;
                 background-size: cover !important;
                 background-position: center !important;
                 background-repeat: no-repeat !important;
                 background-attachment: fixed !important;
             }}
-            /* Estilización de los inputs de la barra de login para alto contraste */
             [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
             [data-testid="stSidebar"] label {{
                 color: #FFFFFF !important;
@@ -170,77 +165,21 @@ else:
         )
 
     # =====================================================================
-    # CONTENEDOR SEMITRANSPARENTE PARA ALTA LEGIBILIDAD
-    # =====================================================================
-    # =====================================================================
-    # CONTENEDOR BLANCO CON TEXTO DESPLEGABLE A PETICIÓN (MENÚ OCULTO)
-    # =====================================================================
-    # =====================================================================
-    # LOGOTIPO FLOTANTE CENTRADO Y CONTENEDOR BLANCO INTERACTIVO (HTML PURO)
+    # INTERPRETACIÓN CORRECTA DE LA INTERFAZ DE BIENVENIDA
     # =====================================================================
     diseno_login_html = """
-    <div style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 40px;
-        width: 100%;
-    ">
+    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 40px; width: 100%;">
         <!-- Logotipo Flotante Centrado -->
-          <img src="https://github.com/lascricca/DaDiMAC/blob/main/LOGO%20MAC.jpeg?raw=true" style="
-            width: 130px;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.25);
-            margin-bottom: -20px;
-            z-index: 10;
-            background-color: #FFFFFF;
-            padding: 5px;
-        ">
+        <img src="https://github.com/lascricca/DaDiMAC/blob/main/LOGO%20MAC.jpeg?raw=true" style="width: 130px; height: auto; border-radius: 12px; box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.25); margin-bottom: -20px; z-index: 10; background-color: #FFFFFF; padding: 5px;">
 
         <!-- Contenedor Blanco Principal -->
-        <div style="
-            background-color: rgba(255, 255, 255, 0.88);
-            padding: 45px 35px 35px 35px;
-            border-radius: 12px;
-            border-top: 5px solid #2678FE;
-            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 850px;
-            z-index: 1;
-        ">
+        <div style="background-color: rgba(255, 255, 255, 0.88); padding: 45px 35px 35px 35px; border-radius: 12px; border-top: 5px solid #2678FE; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3); width: 100%; max-width: 850px; z-index: 1;">
             <details style="cursor: pointer; outline: none;">
-                <summary style="
-                    list-style: none;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    color: #1E1E1E;
-                    font-size: 28px;
-                    font-weight: bold;
-                    font-family: 'Source Sans Pro', sans-serif;
-                ">
+                <summary style="list-style: none; display: flex; align-items: center; justify-content: space-between; color: #1E1E1E; font-size: 28px; font-weight: bold; font-family: 'Source Sans Pro', sans-serif;">
                     <span>🔒 Plataforma de Auditoría Contable DaDiMAC</span>
-                    <span style="
-                        font-size: 15px; 
-                        color: #2678FE; 
-                        background-color: rgba(38, 120, 254, 0.1); 
-                        padding: 4px 12px; 
-                        border-radius: 20px;
-                        font-weight: bold;
-                    ">ℹ️ Ver guía</span>
+                    <span style="font-size: 15px; color: #2678FE; background-color: rgba(38, 120, 254, 0.1); padding: 4px 12px; border-radius: 20px; font-weight: bold;">ℹ️ Ver guía</span>
                 </summary>
-                <p style="
-                    color: #2F3E46;
-                    font-size: 16px;
-                    line-height: 1.6;
-                    margin-top: 20px;
-                    margin-bottom: 0;
-                    padding-top: 15px;
-                    border-top: 1px dashed rgba(0, 0, 0, 0.1);
-                    font-family: 'Source Sans Pro', sans-serif;
-                    cursor: default;
-                ">
+                <p style="color: #2F3E46; font-size: 16px; line-height: 1.6; margin-top: 20px; margin-bottom: 0; padding-top: 15px; border-top: 1px dashed rgba(0, 0, 0, 0.1); font-family: 'Source Sans Pro', sans-serif; cursor: default;">
                     Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. 
                     Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro 
                     o usar el botón de restablecimiento automático provisto por el sistema.
@@ -250,7 +189,7 @@ else:
     </div>
     """
     
-    # Forzamos la ejecución de la cadena HTML en la interfaz de Streamlit
+    # Se inyecta usando una sola línea limpia sin intermediarios
     st.markdown(diseno_login_html, unsafe_allow_html=True)
 
     # Renderizado del bloque de texto corporativo de bienvenida
