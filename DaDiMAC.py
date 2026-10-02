@@ -65,8 +65,7 @@ if usuarios.login_sidebar():
             options=lista_companias_disponibles,
             default=valores_defecto_emp
         )
-
-        
+      
         if not companias_seleccionadas:
             st.warning("⚠️ Selecciona al menos una empresa contable en la barra lateral.")
         else:
@@ -126,15 +125,10 @@ if usuarios.login_sidebar():
     else:
         st.warning("⚠️ El archivo 'DaDiMAC_ExtraeCSV.csv' está vacío o desincronizado.")
 else:
-    # Mensaje elegante cuando la aplicación está totalmente bloqueada en la nube
-    st.title("🔒 Plataforma de Auditoría Contable DaDiMAC")
-    st.info("Introduce tus credenciales autorizadas en el panel izquierdo para acceder. Si es tu primera vez o perdiste tu acceso, puedes registrarte o usar el botón de restablecimiento automático.")
-    
     # =====================================================================
-    # INYECCIÓN DE FONDO DE PANTALLA EXCLUSIVO DESDE TU REPOSITORIO GITHUB
+    # 1. ACCIÓN PRIORITARIA: INYECTAR EL FONDO DE IMAGEN INMEDIATAMENTE
     # =====================================================================
-    # URL Cruda corregida con el subdominio 'raw' para lectura directa de Streamlit
-    URL_FONDO_GITHUB = "https://github.com/lascricca/DaDiMAC/blob/main/Ejecutivos.jpg?raw=true" 
+    URL_FONDO_GITHUB = "https://github.com" 
     
     st.markdown(
         f"""
@@ -157,3 +151,9 @@ else:
         """,
         unsafe_allow_html=True
     )
+
+    # =====================================================================
+    # 2. RENDERIZADO VISUAL DEL TEXTO (SOBRE EL FONDO YA CARGADO)
+    # =====================================================================
+    st.title("🔒 Plataforma de Auditoría Contable DaDiMAC")
+    st.info("Introduce tus credenciales autorizadas en el panel izquierdo para acceder. Si es tu primera vez o perdiste tu acceso, puedes registrarte o usar el botón de restablecimiento automático.")
