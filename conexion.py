@@ -121,11 +121,16 @@ def cargar_datos_vivos_consolidados():
             df['Acción'] = df['Acción'].map(mapa_numerico_sage).fillna(df['Acción'])
 
             # =====================================================================
-            # POLÍTICAS DE EXCLUSIÓN DE SEGURIDAD
+            # POLÍTICAS DE EXCLUSIÓN DE SEGURIDAD Y PERIODO FISCAL
             # =====================================================================
-            # Excluye permanentemente al usuario 'LASA' del universo de datos del Dashboard
+            # A. Excluye permanentemente al usuario 'LASA' del universo de datos
             if 'Usuario' in df.columns:
                 df = df[df['Usuario'].str.strip().str.upper() != 'LASA'].copy()
+
+            # B. FILTRO CRONOLÓGICO: Excluir todo registro estrictamente menor al 01/10/2025
+            if 'Fecha_Hora' in df.columns:
+                limite_fecha = pd.Timestamp('2025-10-01')
+                df = df[df['Fecha_Hora'] >= limite_fecha].copy()
 
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             return df
