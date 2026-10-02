@@ -131,30 +131,45 @@ else:
     # =====================================================================
     # CORRECCIÓN EN CALIENTE: URL RAW PURA DE GITHUB CON REFUERZO CSS
     # =====================================================================
-    URL_FONDO_GITHUB = "https://github.com/lascricca/DaDiMAC/blob/main/Ejecutivos.jpg?raw=true"
-    
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("{URL_FONDO_GITHUB}") !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-            background-attachment: fixed !important;
-        }}
-        /* Estilización de los inputs de la barra de login para alto contraste */
-        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
-        [data-testid="stSidebar"] label {{
-            color: #FFFFFF !important;
-            font-weight: bold !important;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8) !important;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    # =====================================================================
+    # MOTOR DE INYECCIÓN LOCAL INMUNE A BLOQUEOS DE RED (BASE64)
+    # =====================================================================
+    import base64
+    import os
 
+    # Inicializamos una variable de fondo vacía para evitar caídas en el script
+    img_base64 = ""
+    
+    # Buscamos el archivo físico 'Ejecutivos.jpg' dentro de tu repositorio local
+    if os.path.exists("Ejecutivos.jpg"):
+        with open("Ejecutivos.jpg", "rb") as image_file:
+            img_base64 = base64.b64encode(image_file.read()).decode()
+
+    # Si el archivo existe en la raíz, inyectamos los bytes nativos en el CSS
+    if img_base64:
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("data:image/jpg;base64,{img_base64}") !important;
+                background-size: cover !important;
+                background-position: center !important;
+                background-repeat: no-repeat !important;
+                background-attachment: fixed !important;
+            }}
+            /* Estilización de los inputs de la barra de login para alto contraste */
+            [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
+            [data-testid="stSidebar"] label {{
+                color: #FFFFFF !important;
+                font-weight: bold !important;
+                text-shadow: 1px 1px 3px rgba(0,0,0,0.8) !important;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # Renderizado del bloque de texto corporativo de bienvenida
     # Mensaje elegante cuando la aplicación está totalmente bloqueada en la nube
     # =====================================================================
     # 2. RENDERIZADO VISUAL DEL TEXTO (SOBRE EL FONDO YA CARGADO)
