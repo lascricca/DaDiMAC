@@ -50,13 +50,8 @@ if usuarios.login_sidebar():
         # =====================================================================
         # ENCABEZADO DE LA BARRA LATERAL: LOGO DE LA MARCA
         # =====================================================================
-        # Si tienes el archivo guardado en tu repositorio de GitHub, usa el nombre del archivo:
         st.sidebar.image("LOGO LASA.gif", width=104, use_container_width=False)
         st.sidebar.markdown("### L.A. Scricca Asesores, S.A.")
-        
-        # NOTA: Si prefieres cargarlo desde una dirección web (URL pública), 
-        # puedes reemplazar el texto anterior por el enlace directo entre comillas.
-
         
         # --- FILTRO 1: MULTISELECTOR MÁSTER POR EMPRESA (INTERFAZ OPTIMIZADA)
         st.sidebar.header("🏢 1. Filtro por Empresa")
@@ -134,8 +129,31 @@ else:
     # Mensaje elegante cuando la aplicación está totalmente bloqueada en la nube
     st.title("🔒 Plataforma de Auditoría Contable DaDiMAC")
     st.info("Introduce tus credenciales autorizadas en el panel izquierdo para acceder. Si es tu primera vez o perdiste tu acceso, puedes registrarte o usar el botón de restablecimiento automático.")
+    
     # =====================================================================
     # INYECCIÓN DE FONDO DE PANTALLA EXCLUSIVO DESDE TU REPOSITORIO GITHUB
     # =====================================================================
-    # Se jala la imagen cruda directamente desde tu repositorio principal DaDiMAC
+    # URL Cruda corregida con el subdominio 'raw' para lectura directa de Streamlit
     URL_FONDO_GITHUB = "https://githubusercontent.com"
+    
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("{URL_FONDO_GITHUB}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+        /* Estilización de los inputs de la barra de login para alto contraste */
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
+        [data-testid="stSidebar"] label {{
+            color: #FFFFFF !important;
+            font-weight: bold !important;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
