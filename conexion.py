@@ -120,6 +120,13 @@ def cargar_datos_vivos_consolidados():
             # 4. Sustitución de los números por sus respectivos literales contables
             df['Acción'] = df['Acción'].map(mapa_numerico_sage).fillna(df['Acción'])
 
+            # =====================================================================
+            # POLÍTICAS DE EXCLUSIÓN DE SEGURIDAD
+            # =====================================================================
+            # Excluye permanentemente al usuario 'LASA' del universo de datos del Dashboard
+            if 'Usuario' in df.columns:
+                df = df[df['Usuario'].str.strip().str.upper() != 'LASA'].copy()
+
             df = df.sort_values(by='Fecha_Hora', ascending=False)
             return df
         else:
