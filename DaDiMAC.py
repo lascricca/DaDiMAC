@@ -166,27 +166,29 @@ else:
         )
 
     # =====================================================================
-    # INTERFAZ COMPACTA AJUSTADA A LA MITAD DE TAMAÑO (MAXIMA VISUALIZACION)
+    # INTERFAZ COMPACTA EN EL EXTREMO INFERIOR DE LA PANTALLA
     # =====================================================================
-    html_logo = '<div style="display: flex; flex-direction: column; align-items: center; margin-top: 60px; width: 100%;">'
+    # Forzamos una altura de contenedor que empuje todo al borde inferior de la ventana visible
+    html_logo = '<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 70vh; width: 100%; margin-bottom: 20px;">'
     
     if logo_base64:
-        # Logotipo reducido armoniosamente a 85px de ancho
-        html_logo += f'<img src="data:image/jpeg;base64,{logo_base64}" style="width: 85px; height: auto; border-radius: 10px; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25); margin-bottom: -15px; z-index: 10; background-color: #FFFFFF; padding: 4px;">'
+        # Logotipo compacto ajustado a 75px para una transición limpia
+        html_logo += f'<img src="data:image/jpeg;base64,{logo_base64}" style="width: 75px; height: auto; border-radius: 8px; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25); margin-bottom: -12px; z-index: 10; background-color: #FFFFFF; padding: 3px;">'
     else:
-        html_logo += '<div style="margin-bottom: -15px; z-index: 10;"></div>'
+        html_logo += '<div style="margin-bottom: -12px; z-index: 10;"></div>'
     
-    # Reducción drástica del ancho máximo (max-width: 480px) y padding optimizado
-    html_cuerpo = '<div style="background-color: rgba(255, 255, 255, 0.90); padding: 30px 20px 20px 20px; border-radius: 10px; border-top: 5px solid #2678FE; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3); width: 100%; max-width: 480px; z-index: 1;">'
+    # Contenedor optimizado a un ancho elegante de 460px con rellenos ajustados
+    html_cuerpo = '<div style="background-color: rgba(255, 255, 255, 0.90); padding: 22px 18px 15px 18px; border-radius: 10px; border-top: 5px solid #2678FE; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3); width: 100%; max-width: 460px; z-index: 1;">'
     html_cuerpo += '<details style="cursor: pointer; outline: none;">'
     
-    # Reducción del tamaño de fuente a 20px para encajar de manera ejecutiva en el ancho estrecho
-    html_cuerpo += '<summary style="list-style: none; display: flex; align-items: center; justify-content: space-between; color: #1E1E1E; font-size: 20px; font-weight: bold; font-family: \'Source Sans Pro\', sans-serif;">'
+    # Reducción tipográfica de las letras internas a 17px para un ajuste perfecto en el recuadro
+    html_cuerpo += '<summary style="list-style: none; display: flex; align-items: center; justify-content: space-between; color: #1E1E1E; font-size: 17px; font-weight: bold; font-family: \'Source Sans Pro\', sans-serif;">'
     html_cuerpo += '<span>🔒 Panel DaDiMAC</span>'
-    html_cuerpo += '<span style="font-size: 13px; color: #2678FE; background-color: rgba(38, 120, 254, 0.1); padding: 3px 10px; border-radius: 15px; font-weight: bold; white-space: nowrap;">ℹ️ Ver guía</span>'
+    html_cuerpo += '<span style="font-size: 12px; color: #2678FE; background-color: rgba(38, 120, 254, 0.1); padding: 2px 8px; border-radius: 12px; font-weight: bold; white-space: nowrap;">ℹ️ Ver guía</span>'
     html_cuerpo += '</summary>'
     
-    html_texto = '<p style="color: #2F3E46; font-size: 14px; line-height: 1.5; margin-top: 15px; margin-bottom: 0; padding-top: 12px; border-top: 1px dashed rgba(0, 0, 0, 0.1); font-family: \'Source Sans Pro\', sans-serif; cursor: default;">'
+    # Letras del texto interno ajustadas a tamaño 13px para máxima compacidad al desplegarse
+    html_texto = '<p style="color: #2F3E46; font-size: 13px; line-height: 1.4; margin-top: 10px; margin-bottom: 0; padding-top: 10px; border-top: 1px dashed rgba(0, 0, 0, 0.1); font-family: \'Source Sans Pro\', sans-serif; cursor: default;">'
     html_texto += 'Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. '
     html_texto += 'Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro '
     html_texto += 'o usar el botón de restablecimiento automático provisto por el sistema.'
