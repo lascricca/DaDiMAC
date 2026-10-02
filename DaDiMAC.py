@@ -166,25 +166,27 @@ else:
         )
 
     # =====================================================================
-    # INTERFAZ DE BIENVENIDA EN LÍNEA ÚNICA CON LOGO LOCAL PROTEGIDO
+    # INTERFAZ COMPACTA AJUSTADA A LA MITAD DE TAMAÑO (MAXIMA VISUALIZACION)
     # =====================================================================
-    html_logo = '<div style="display: flex; flex-direction: column; align-items: center; margin-top: 40px; width: 100%;">'
+    html_logo = '<div style="display: flex; flex-direction: column; align-items: center; margin-top: 60px; width: 100%;">'
     
-    # Inyectamos el logo local si se leyó de forma correcta desde tu repositorio
     if logo_base64:
-        html_logo += f'<img src="data:image/jpeg;base64,{logo_base64}" style="width: 130px; height: auto; border-radius: 12px; box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.25); margin-bottom: -20px; z-index: 10; background-color: #FFFFFF; padding: 5px;">'
+        # Logotipo reducido armoniosamente a 85px de ancho
+        html_logo += f'<img src="data:image/jpeg;base64,{logo_base64}" style="width: 85px; height: auto; border-radius: 10px; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.25); margin-bottom: -15px; z-index: 10; background-color: #FFFFFF; padding: 4px;">'
     else:
-        # Respaldo en caso de que el archivo tenga extensión .jpg en minúsculas en tu repositorio
-        html_logo += '<div style="margin-bottom: -20px; z-index: 10;"></div>'
+        html_logo += '<div style="margin-bottom: -15px; z-index: 10;"></div>'
     
-    html_cuerpo = '<div style="background-color: rgba(255, 255, 255, 0.88); padding: 45px 35px 35px 35px; border-radius: 12px; border-top: 5px solid #2678FE; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3); width: 100%; max-width: 850px; z-index: 1;">'
+    # Reducción drástica del ancho máximo (max-width: 480px) y padding optimizado
+    html_cuerpo = '<div style="background-color: rgba(255, 255, 255, 0.90); padding: 30px 20px 20px 20px; border-radius: 10px; border-top: 5px solid #2678FE; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3); width: 100%; max-width: 480px; z-index: 1;">'
     html_cuerpo += '<details style="cursor: pointer; outline: none;">'
-    html_cuerpo += '<summary style="list-style: none; display: flex; align-items: center; justify-content: space-between; color: #1E1E1E; font-size: 28px; font-weight: bold; font-family: \'Source Sans Pro\', sans-serif;">'
-    html_cuerpo += '<span>🔒 Plataforma de Auditoría Contable DaDiMAC</span>'
-    html_cuerpo += '<span style="font-size: 15px; color: #2678FE; background-color: rgba(38, 120, 254, 0.1); padding: 4px 12px; border-radius: 20px; font-weight: bold;">ℹ️ Ver guía</span>'
+    
+    # Reducción del tamaño de fuente a 20px para encajar de manera ejecutiva en el ancho estrecho
+    html_cuerpo += '<summary style="list-style: none; display: flex; align-items: center; justify-content: space-between; color: #1E1E1E; font-size: 20px; font-weight: bold; font-family: \'Source Sans Pro\', sans-serif;">'
+    html_cuerpo += '<span>🔒 Panel DaDiMAC</span>'
+    html_cuerpo += '<span style="font-size: 13px; color: #2678FE; background-color: rgba(38, 120, 254, 0.1); padding: 3px 10px; border-radius: 15px; font-weight: bold; white-space: nowrap;">ℹ️ Ver guía</span>'
     html_cuerpo += '</summary>'
     
-    html_texto = '<p style="color: #2F3E46; font-size: 16px; line-height: 1.6; margin-top: 20px; margin-bottom: 0; padding-top: 15px; border-top: 1px dashed rgba(0, 0, 0, 0.1); font-family: \'Source Sans Pro\', sans-serif; cursor: default;">'
+    html_texto = '<p style="color: #2F3E46; font-size: 14px; line-height: 1.5; margin-top: 15px; margin-bottom: 0; padding-top: 12px; border-top: 1px dashed rgba(0, 0, 0, 0.1); font-family: \'Source Sans Pro\', sans-serif; cursor: default;">'
     html_texto += 'Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. '
     html_texto += 'Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro '
     html_texto += 'o usar el botón de restablecimiento automático provisto por el sistema.'
