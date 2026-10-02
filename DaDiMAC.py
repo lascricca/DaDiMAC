@@ -172,6 +172,9 @@ else:
     # =====================================================================
     # CONTENEDOR SEMITRANSPARENTE PARA ALTA LEGIBILIDAD
     # =====================================================================
+    # =====================================================================
+    # CONTENEDOR BLANCO CON TEXTO DESPLEGABLE A PETICIÓN (MENÚ OCULTO)
+    # =====================================================================
     st.markdown(
         """
         <div style="
@@ -183,25 +186,43 @@ else:
             margin-top: 50px;
             max-width: 850px;
         ">
-            <h1 style="
-                color: #1E1E1E;
-                font-size: 32px;
-                font-weight: bold;
-                margin-top: 0;
-                margin-bottom: 15px;
-                font-family: 'Source Sans Pro', sans-serif;
-            ">🔒 Plataforma de Auditoría Contable DaDiMAC</h1>
-            <p style="
-                color: #2F3E46;
-                font-size: 16px;
-                line-height: 1.6;
-                margin: 0;
-                font-family: 'Source Sans Pro', sans-serif;
-            ">
-                Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. 
-                Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro 
-                o usar el botón de restablecimiento automático provisto por el sistema.
-            </p>
+            <details style="cursor: pointer; outline: none;">
+                <summary style="
+                    list-style: none;
+                    display: flex;
+                    align-items: center;
+                    color: #1E1E1E;
+                    font-size: 32px;
+                    font-weight: bold;
+                    font-family: 'Source Sans Pro', sans-serif;
+                ">
+                    🔒 Plataforma de Auditoría Contable DaDiMAC 
+                    <span style="
+                        margin-left: 15px; 
+                        font-size: 22px; 
+                        color: #2678FE; 
+                        background-color: rgba(38, 120, 254, 0.1); 
+                        padding: 2px 10px; 
+                        border-radius: 20px;
+                        font-weight: normal;
+                    ">ℹ️ Ver guía</span>
+                </summary>
+                <p style="
+                    color: #2F3E46;
+                    font-size: 16px;
+                    line-height: 1.6;
+                    margin-top: 20px;
+                    margin-bottom: 0;
+                    padding-top: 15px;
+                    border-top: 1px dashed rgba(0, 0, 0, 0.1);
+                    font-family: 'Source Sans Pro', sans-serif;
+                    cursor: default;
+                ">
+                    Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. 
+                    Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro 
+                    o usar el botón de restablecimiento automático provisto por el sistema.
+                </p>
+            </details>
         </div>
         """,
         unsafe_allow_html=True
