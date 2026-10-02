@@ -89,13 +89,37 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
 
     st.markdown("---")
 
+    # 3. Gráfico de volumen financiero MainAmt (ETIQUETAS OPTIMIZADAS ENCIMA DE LA BARRA)
     if 'Monto' in df_filtrado.columns and df_filtrado['Monto'].sum() > 0:
         st.subheader("💰 Distribución Financiera de Operaciones")
         df_monetario = df_filtrado.groupby('Compañía')['Monto'].sum().reset_index()
         df_monetario = df_monetario.sort_values(by='Monto', ascending=False).head(10)
-        fig_monetario = px.bar(df_monetario, x='Compañía', y='Monto', title="Volumen Monetario Total por Firma ($ MainAmt)", labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, text_auto='.2s', color_discrete_sequence=['#2CA02C'])
-        fig_monetario.update_layout(xaxis=dict(fixedrange=True, tickangle=-25), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=40))
-        fig_monetario.update_traces(textposition='inside', textfont=dict(color='white', size=12, weight='bold'), cliponaxis=False)
+        
+        # El parámetro text_auto='.2s' formatea de forma ejecutiva los millones (M) y miles (k)
+        fig_monetario = px.bar(
+            df_monetario, x='Compañía', y='Monto', 
+            title="Volumen Monetario Total por Firma ($ MainAmt)", 
+            labels={'Monto': 'Suma Monetaria ($)', 'Compañía': 'Empresa'}, 
+            text_auto='.2s', 
+            color_discrete_sequence=['#2CA02C']
+        )
+        
+        fig_monetario.update_layout(
+            xaxis=dict(fixedrange=True, tickangle=-25), 
+            yaxis=dict(fixedrange=True), 
+            hovermode=False, 
+            template="plotly_white", 
+            height=380, 
+            margin=dict(l=20, r=20, t=40, b=40)
+        )
+        
+        # INYECCIÓN MÁSTER DE CONTRASTE: Fuerza la posición externa del texto en color blanco e incrementa el tamaño
+        fig_monetario.update_traces(
+            textposition='outside', 
+            textfont=dict(color='white', size=13, weight='bold'), 
+            cliponaxis=False
+        )
+        
         st.plotly_chart(fig_monetario, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
         st.markdown("---")
     # 4. GRÁFICA DE LÍNEA: CLICS POR MES CON TEXTO SUPERPUESTO FIJO
