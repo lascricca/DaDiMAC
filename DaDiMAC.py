@@ -151,7 +151,7 @@ else:
             f"""
             <style>
             .stApp {{
-                background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url("data:image/jpg;base64,{img_base64}") !important;
+                background-image: linear-gradient(rgba(0, 0, 0, 0.40), rgba(0, 0, 0, 0.40)), url("data:image/jpg;base64,{img_base64}") !important;
                 background-size: cover !important;
                 background-position: center !important;
                 background-repeat: no-repeat !important;
@@ -169,10 +169,48 @@ else:
             unsafe_allow_html=True
         )
 
+    # =====================================================================
+    # CONTENEDOR SEMITRANSPARENTE PARA ALTA LEGIBILIDAD
+    # =====================================================================
+    st.markdown(
+        """
+        <div style="
+            background-color: rgba(255, 255, 255, 0.88);
+            padding: 35px;
+            border-radius: 12px;
+            border-left: 6px solid #2678FE;
+            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3);
+            margin-top: 50px;
+            max-width: 850px;
+        ">
+            <h1 style="
+                color: #1E1E1E;
+                font-size: 32px;
+                font-weight: bold;
+                margin-top: 0;
+                margin-bottom: 15px;
+                font-family: 'Source Sans Pro', sans-serif;
+            ">🔒 Plataforma de Auditoría Contable DaDiMAC</h1>
+            <p style="
+                color: #2F3E46;
+                font-size: 16px;
+                line-height: 1.6;
+                margin: 0;
+                font-family: 'Source Sans Pro', sans-serif;
+            ">
+                Introduce tus credenciales autorizadas en el panel izquierdo para acceder al entorno de control. 
+                Si es tu primera vez en la plataforma o perdiste tu acceso de auditor, puedes gestionar tu registro 
+                o usar el botón de restablecimiento automático provisto por el sistema.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     # Renderizado del bloque de texto corporativo de bienvenida
     # Mensaje elegante cuando la aplicación está totalmente bloqueada en la nube
     # =====================================================================
     # 2. RENDERIZADO VISUAL DEL TEXTO (SOBRE EL FONDO YA CARGADO)
     # =====================================================================
-    st.title("🔒 Plataforma de Auditoría Contable DaDiMAC")
-    st.info("Introduce tus credenciales autorizadas en el panel izquierdo para acceder. Si es tu primera vez o perdiste tu acceso, puedes registrarte o usar el botón de restablecimiento automático.")
+    #st.title("🔒 Plataforma de Auditoría Contable DaDiMAC")
+    #st.info("Introduce tus credenciales autorizadas en el panel izquierdo para acceder. Si es tu primera vez o perdiste tu acceso, puedes registrarte o usar el botón de restablecimiento automático.")
