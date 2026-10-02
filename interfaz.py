@@ -76,7 +76,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     fig_top_comp = px.bar(top10_comp, x='Clics', y='Compañía', orientation='h', title="Top 10 Empresas más Activas", labels={'Clics': 'Cantidad de Movimientos', 'Compañía': 'Razón Social'}, color_continuous_scale='Blues', color='Clics', text='Texto_Clics')
     fig_top_comp.update_layout(xaxis=dict(fixedrange=True), yaxis=dict(fixedrange=True), hovermode=False, template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
     # CORRECCIÓN EN CALIENTE: textposition='inside' y color amarillo fuerte solo aquí
-    fig_top_comp.update_traces(textposition='inside', textfont=dict(color='#FFD700', size=12, weight='bold'), cliponaxis=False)
+    fig_top_comp.update_traces(textposition='inside', textfont=dict(color='#FF0000', size=12, weight='bold'), cliponaxis=False)
     st.plotly_chart(fig_top_comp, use_container_width=True, config={'displayModeBar': False, 'staticPlot': True})
 
     st.markdown("---")
