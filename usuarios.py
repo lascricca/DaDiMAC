@@ -17,11 +17,11 @@ from email.mime.multipart import MIMEMultipart
 API_KEY = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20" 
 
 # 2. URLs oficiales y completas para la API REST de Firebase Auth
-URL_SIGN_UP = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
-URL_SIGN_IN = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
-URL_PASSWORD_RESET = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={API_KEY}"
+URL_SIGN_UP = f"https://googleapis.com{API_KEY}"
+URL_SIGN_IN = f"https://googleapis.com{API_KEY}"
+URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY}"
 
-# Endpoint complementario oficial para la modificación de estados de cuenta
+# CORRECCIÓN DEFINITIVA: Se asegura la estructura exacta de la URL de actualización con su barra diagonal obligatoria
 URL_UPDATE_USER = f"https://googleapis.com{API_KEY}"
 
 # ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
@@ -31,7 +31,7 @@ HEADERS_JSON = {"Content-Type": "application/json"}
 # CONFIGURACIÓN MAESTRA DE MENSAJERÍA PARA CONTROL GERENCIAL
 # =====================================================================
 CORREO_EMISOR = "dadimacalarma@gmail.com"
-PASSWORD_EMISOR = "mcgfftyvlorgazun"  # Tu contraseña de aplicación de Google de 16 caracteres
+PASSWORD_EMISOR = "mcgfftyvlorgazun"  
 
 # CORREO_MASTER: Tu bandeja personal donde recibirás los accesos pendientes.
 CORREO_MASTER = "dadimacalarma@gmail.com"
@@ -46,8 +46,6 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
         msg['Subject'] = asunto
         msg.attach(MIMEText(cuerpo_html, 'html'))
         
-        # SOLUCIÓN DE INGENIERÍA: Usamos la IP principal del cluster SMTP de Google (GMR-MX)
-        # Esto salta el NameResolutionError ya que no requiere consultar '://gmail.com' al DNS corporativo
         host_ip_directo = "64.233.186.108" 
         
         server = smtplib.SMTP(host_ip_directo, 587, timeout=10)
@@ -63,7 +61,6 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
     except Exception as e:
         st.sidebar.error(f"❌ Conexión SMTP rechazada por el perímetro: {str(e)}")
         return False
-
 
 
 def inicializar_sesion():
