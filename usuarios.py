@@ -14,9 +14,9 @@ from email.mime.multipart import MIMEMultipart
 API_KEY = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20" 
 
 # 2. URLs oficiales y completas para la API REST de Firebase Auth
-URL_SIGN_UP = f"https://googleapis.com{API_KEY}"
-URL_SIGN_IN = f"https://googleapis.com{API_KEY}"
-URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY}"
+URL_SIGN_UP = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
+URL_SIGN_IN = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
+URL_PASSWORD_RESET = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={API_KEY}"
 
 # ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
 HEADERS_JSON = {"Content-Type": "application/json"}
@@ -34,7 +34,7 @@ def inicializar_sesion():
     if "esperando_verificacion" not in st.session_state:
         st.session_state.esperando_verificacion = False
 
-
+#2
 def enviar_correo_restablecimiento(email):
     """Dispara un correo electrónico de recuperación de clave vía Firebase Auth"""
     payload = {"requestType": "PASSWORD_RESET", "email": email}
