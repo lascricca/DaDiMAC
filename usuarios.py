@@ -75,23 +75,9 @@ def inicializar_sesion():
         st.session_state.token_registro = None
         st.session_state.datos_pendientes = None
 
-#--------
+#----------
 # Parte 2
-#--------
-
-# def enviar_correo_restablecimiento(email):
-#     """Dispara un correo electrónico de recuperación de clave vía Firebase Auth"""
-#     payload = {"requestType": "PASSWORD_RESET", "email": email}
-#     try:
-#         respuesta = requests.post(URL_PASSWORD_RESET, json=payload, headers=HEADERS_JSON)
-#         if respuesta.status_code == 200:
-#             return True, f"📩 Enlace enviado a **{email}**. Revisa tu bandeja de entrada o spam para restablecer tu contraseña."
-#         else:
-#             datos = respuesta.json()
-#             error_msg = datos.get("error", {}).get("message", "Error desconocido")
-#             return False, f"⚠️ Error de Firebase: {error_msg}"
-#     except Exception as e:
-#         return False, f"❌ Error de red: {str(e)}"
+#---------
 
 def enviar_token_por_api_web(destinatario, token):
     """
@@ -115,18 +101,21 @@ def registrar_usuario_firebase(email, password):
     """
     payload_signup = {"email": email, "password": password, "returnSecureToken": True}
     try:
-        # Paso 1: Crear el usuario usando tu URL oficial de la Parte 1
+        # Paso 1: Crear el usuario usando tu URL oficial de la Parte 1 (AQUÍ SÍ FUNCIONA)
         respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
         
         if respuesta_signup.status_code == 200:
             datos_signup = respuesta_signup.json()
             id_token = datos_signup.get("idToken")
             
-            # Paso 2: Forzar la inhabilitación del usuario usando la URL oficial de actualización
+            # Paso 2: Forzar la inhabilitación del usuario
             payload_disable = {
                 "idToken": id_token,
                 "disableUser": True
             }
+            
+            # CORRECCIÓN GERENCIAL CRÍTICA: Cambiamos cualquier URL hardcodeada vieja 
+            # y llamamos estrictamente a la variable global URL_UPDATE_USER de la Parte 1
             requests.post(URL_UPDATE_USER, json=payload_disable, headers=HEADERS_JSON)
             
             return True, "🎉 Registro procesado en la nube en estado retenido."
@@ -148,8 +137,6 @@ def validar_usuario_firebase(email, password):
         "returnSecureToken": True
     }
     try:
-        # CORRECCIÓN CRÍTICA: Se fuerza el uso exclusivo de URL_SIGN_IN (que está bien escrita en la Parte 1)
-        # Esto elimina cualquier intento de llamar a la variable de actualización que generaba el error de red
         respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             datos = respuesta.json()
@@ -159,9 +146,8 @@ def validar_usuario_firebase(email, password):
             datos = respuesta.json()
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
-            # Captura el bloqueo automático aplicado en el registro o el manual desde tu consola Firebase Auth
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
-                return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notified por tu correo electrónico una vez otorgada la autorización."
+                return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
             
             if error_code in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
                 error_code = "Credenciales incorrectas o inválidas."
