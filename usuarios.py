@@ -214,7 +214,7 @@ def login_sidebar():
                         if token_ingresado == str(st.session_state.get("token_registro")):
                             datos = st.session_state.get("datos_pendientes")
                             
-                            # PASO CRÍTICO: RECIÉN AQUÍ SE REALIZA LA CREACIÓN FÍSICA EN FIREBASE
+                            # PASO CRÍTICO: RECIÉN AQUÍ SE REALIZA LA CREACIÓN FÍSICA EN FIREBASE INHABILITADA
                             exito, msg = registrar_usuario_firebase(datos["email"], datos["pass"])
                             
                             if exito:
@@ -233,7 +233,7 @@ def login_sidebar():
                                 enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
                                 
                                 st.sidebar.success("🎉 ¡Correo verificado e inscrito en Firebase!")
-                                st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
+                                st.sidebar.error("🔒 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
                                 
                                 st.session_state.token_registro = None
                                 st.session_state.datos_pendientes = None
@@ -252,12 +252,12 @@ def login_sidebar():
                     if nuevo_email and len(nueva_pass) >= 6:
                         token_generado = random.randint(100000, 999999)
                         
+                        # Sincronización directa con el motor SMTP real de la Parte 1
                         if enviar_token_por_api_web(nuevo_email, token_generado):
                             st.session_state.token_registro = token_generado
                             st.session_state.datos_pendientes = {"email": nuevo_email, "pass": nueva_pass}
                             st.rerun()
-                        # ELIMINÉ EL 'ELSE' QUE PINTABA EL MENSAJE GENÉRICO FIJO
-
+                        # Si falla, el motor de la Parte 1 ya imprimirá su propio st.sidebar.error detallado en pantalla
                     else:
                         st.sidebar.error("⚠️ El correo es obligatorio y la contraseña debe tener 6 caracteres o más.")
             
