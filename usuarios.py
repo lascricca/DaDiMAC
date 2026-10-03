@@ -48,7 +48,7 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
         
         # AGREGAMOS timeout=5: Si el Firewall bloquea el puerto corporativo, 
         # el sistema aborta en 5 segundos en lugar de quedarse congelado eternamente.
-        server = smtplib.SMTP("://smtp.gmail.com", 587, timeout=5)
+        server = smtplib.SMTP("://gmail.com", 587, timeout=5)
         server.starttls()
         
         server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
