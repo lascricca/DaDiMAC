@@ -43,7 +43,8 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
         msg['Subject'] = asunto
         msg.attach(MIMEText(cuerpo_html, 'html'))
         
-        server = smtplib.SMTP("://gmail.com", 587)
+        # CORRECCIÓN QUIRÚRGICA: Dirección de host oficial fija para evitar caídas de resolución de red
+        server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
         server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
@@ -67,6 +68,7 @@ def inicializar_sesion():
 #--------
 # Parte 2
 #--------
+
 def enviar_correo_restablecimiento(email):
     """Dispara un correo electrónico de recuperación de clave vía Firebase Auth"""
     payload = {"requestType": "PASSWORD_RESET", "email": email}
@@ -81,11 +83,10 @@ def enviar_correo_restablecimiento(email):
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
 
-
 def enviar_token_por_api_web(destinatario, token):
     """
-    Envía el token dinámico de 6 dígitos usando el servidor SMTP de Google corporativo.
-    Esta función está blindada para ejecutarse dentro del flujo estructural.
+    Prepara y despacha el correo corporativo con el token OTP dinámico.
+    Utiliza el motor SMTP validado en la Parte 1.
     """
     asunto = f"🔑 Código de Verificación DaDiMAC: {token}"
     cuerpo_html = f"""
@@ -94,7 +95,6 @@ def enviar_token_por_api_web(destinatario, token):
     <h1 style='color:#2678FE; letter-spacing: 4px;'>{token}</h1>
     <p>Introduce este código en la barra lateral del sistema para poder procesar tu alta en la base de datos.</p>
     """
-    # Invocamos el despacho nativo
     return enviar_correo_smtp(destinatario, asunto, cuerpo_html)
 
 
@@ -135,7 +135,7 @@ def validar_usuario_firebase(email, password):
             datos = respuesta.json()
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
-            # Captura si el usuario ya está registrado en Firebase Auth pero tú lo deshabilitaste en la consola
+            # Captura si el usuario está registrado en Firebase Auth pero tú lo deshabilitaste en la consola
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
                 return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
             
@@ -148,9 +148,10 @@ def validar_usuario_firebase(email, password):
 #--------
 # Parte 3
 #--------
+
 def login_sidebar():
     """Despliega la pasarela de control de identidad con verificación estricta de Token previo a Firebase"""
-    # SE ENFORZA LA INICIALIZACIÓN INMEDIATA EN LA PRIMERA LÍNEA
+    # Se fuerza la inicialización inmediata para evitar KeyErrors
     inicializar_sesion()
     
     if not st.session_state.get("autenticado", False):
@@ -188,7 +189,7 @@ def login_sidebar():
             nuevo_email = st.sidebar.text_input("Correo corporativo:", key="reg_email").strip().lower()
             nueva_pass = st.sidebar.text_input("Asigna una Contraseña (mín. 6 caracteres):", type="password", key="reg_pass")
             
-            # BLINDAJE ANTI-KEYERROR: Se usa .get() para evitar caídas del sistema
+            # Verificación del Token ANTES de registrar en Firebase
             if st.session_state.get("token_registro") is not None:
                 st.sidebar.warning("🔑 Introduce el token enviado a tu casilla para confirmar la operación:")
                 token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
@@ -203,7 +204,7 @@ def login_sidebar():
                             exito, msg = registrar_usuario_firebase(datos["email"], datos["pass"])
                             
                             if exito:
-                                # Notificación inmediata a tu correo Máster
+                                # Notificación inmediata a tu correo Máster usando la pasarela SMTP de la Parte 1
                                 asunto_master = "🚨 Alerta DaDiMAC: Nueva solicitud de autorización de registro"
                                 cuerpo_master = f"""
                                 <h3>Solicitud de Acceso Pendiente</h3>
