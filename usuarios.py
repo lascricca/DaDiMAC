@@ -1,3 +1,6 @@
+#----------
+# Parte 1
+#---------
 import requests
 import streamlit as st
 import random
@@ -21,8 +24,34 @@ URL_PASSWORD_RESET = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOo
 # ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
 HEADERS_JSON = {"Content-Type": "application/json"}
 
-# CORREO_MASTER: Tu bandeja personal donde centralizas las auditorías si fuese necesario.
+# =====================================================================
+# CONFIGURACIÓN MAESTRA DE MENSAJERÍA PARA CONTROL GERENCIAL
+# =====================================================================
+CORREO_EMISOR = "dadimacalarma@gmail.com"
+PASSWORD_EMISOR = "mcgf ftyv lorg azun"  # Tu contraseña de aplicación de Google de 16 caracteres
+
+# CORREO_MASTER: Tu bandeja personal donde recibirás los accesos pendientes.
 CORREO_MASTER = "dadimacalarma@gmail.com"
+
+
+def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
+    """Establece conexión directa con el servidor SMTP de Google para despachar alertas"""
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = CORREO_EMISOR.strip()
+        msg['To'] = destinatario.strip()
+        msg['Subject'] = asunto
+        msg.attach(MIMEText(cuerpo_html, 'html'))
+        
+        server = smtplib.SMTP("://gmail.com", 587)
+        server.starttls()
+        server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
+        server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Falla en la pasarela de mensajería SMTP: {str(e)}")
+        return False
 
 
 def inicializar_sesion():
@@ -31,8 +60,10 @@ def inicializar_sesion():
         st.session_state.autenticado = False
         st.session_state.usuario_email = None
         st.session_state.pantalla_actual = "login"
-    if "esperando_verificacion" not in st.session_state:
-        st.session_state.esperando_verificacion = False
+    if "token_registro" not in st.session_state:
+        st.session_state.token_registro = None
+        st.session_state.datos_pendientes = None
+
 #--------
 # Parte 2
 #--------
