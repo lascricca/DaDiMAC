@@ -22,7 +22,7 @@ URL_SIGN_IN = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPas
 URL_PASSWORD_RESET = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={API_KEY}"
 
 # CORRECCIÓN EN TU VARIABLE: Dirección oficial de Google Cloud para interactuar con metadatos del usuario
-URL_UPDATE_USER = f"https://googleapis.com{API_KEY}"
+URL_UPDATE_USER = f"https://identitytoolkit.googleapis.com/v1/accounts:update?key={API_KEY}"
 
 # ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
 HEADERS_JSON = {"Content-Type": "application/json"}
