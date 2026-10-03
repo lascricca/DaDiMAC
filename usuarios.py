@@ -49,7 +49,7 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
         msg['Subject'] = asunto
         msg.attach(MIMEText(cuerpo_html, 'html'))
         
-        server = smtplib.SMTP("://gmail.com", 587)
+        server = smtplib.SMTP("://smtp.gmail.com", 587)
         server.starttls()
         server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
         server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
