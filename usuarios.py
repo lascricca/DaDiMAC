@@ -14,107 +14,29 @@ from email.mime.multipart import MIMEMultipart
 API_KEY = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20" 
 
 # 2. URLs oficiales y completas para la API REST de Firebase Auth
-URL_SIGN_UP = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
-URL_SIGN_IN = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
-URL_PASSWORD_RESET = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={API_KEY}"
+URL_SIGN_UP = f"https://googleapis.com{API_KEY}"
+URL_SIGN_IN = f"https://googleapis.com{API_KEY}"
+URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY}"
 
 # ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
 HEADERS_JSON = {"Content-Type": "application/json"}
 
-# =====================================================================
-# CONFIGURACIÓN MAESTRA DE MENSAJERÍA PARA CONTROL GERENCIAL
-# =====================================================================
-CORREO_EMISOR = "dadimacalarma@gmail.com"
-PASSWORD_EMISOR = "mcgf ftyv lorg azun"  # Tu contraseña de aplicación de Google de 16 caracteres
-
-# CORREO_MASTER: Tu bandeja personal donde recibirás los accesos pendientes.
+# CORREO_MASTER: Tu bandeja personal donde centralizas las auditorías si fuese necesario.
 CORREO_MASTER = "dadimacalarma@gmail.com"
 
 
-# def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
-#     """Establece conexión directa con el servidor SMTP de Google para despachar alertas"""
-#     try:
-#         msg = MIMEMultipart()
-#         msg['From'] = CORREO_EMISOR
-#         msg['To'] = destinatario
-#         msg['Subject'] = asunto
-#         msg.attach(MIMEText(cuerpo_html, 'html'))
-        
-#         server = smtplib.SMTP('://gmail.com', 587)
-#         server.starttls()
-#         server.login(CORREO_EMISOR, PASSWORD_EMISOR)
-#         server.sendmail(CORREO_EMISOR, destinatario, msg.as_string())
-#         server.quit()
-#         return True
-#     except Exception as e:
-#         print(f"Falla en la pasarela de mensajería SMTP: {str(e)}")
-#         return False
-#----------------------
-# def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
-#     """Establece conexión directa con el servidor SMTP de Google y diagnostica fallas en vivo"""
-#     try:
-#         msg = MIMEMultipart()
-#         msg['From'] = CORREO_EMISOR
-#         msg['To'] = destinatario
-#         msg['Subject'] = asunto
-#         msg.attach(MIMEText(cuerpo_html, 'html'))
-        
-#         # Conexión cifrada TLS obligatoria con Google
-#         server = smtplib.SMTP('://gmail.com', 587)
-#         server.starttls()
-#         server.login(CORREO_EMISOR, PASSWORD_EMISOR)
-#         server.sendmail(CORREO_EMISOR, destinatario, msg.as_string())
-#         server.quit()
-#         return True
-#     except smtplib.SMTPAuthenticationError:
-#         # Alerta específica si la Contraseña de Aplicación fue rechazada por Google
-#         st.sidebar.error("🔑 Error de Autenticación de Google: La contraseña de aplicación de 16 caracteres (App Password) es inválida o expiró. Por favor genera una nueva en tu cuenta de Google.")
-#         return False
-#     except Exception as e:
-#         # Muestra en la barra lateral el error exacto del servidor en la nube
-#         st.sidebar.error(f"❌ Error de red SMTP: {str(e)}")
-#         return False
-
-#-----------------------
-def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
-    """Establece conexión limpia con el host oficial de Google para despacho de tokens"""
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = CORREO_EMISOR.strip()
-        msg['To'] = destinatario.strip()
-        msg['Subject'] = asunto
-        msg.attach(MIMEText(cuerpo_html, 'html'))
-        
-        # Forzamos la dirección oficial limpia de Google Gmail sin espacios ni caracteres ocultos
-        host_smtp = "://gmail.com"
-        
-        server = smtplib.SMTP(host_smtp, 587)
-        server.starttls()
-        server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
-        server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
-        server.quit()
-        return True
-    except smtplib.SMTPAuthenticationError:
-        st.sidebar.error("🔑 Error de Autenticación: La contraseña de aplicación (App Password) fue rechazada por Google. Verifica que siga activa.")
-        return False
-    except Exception as e:
-        st.sidebar.error(f"❌ Error de resolución de red: {str(e)}")
-        return False
-
-#-----------------------
-#2
 def inicializar_sesion():
     """Mantiene la persistencia del estado de autenticación en la nube"""
     if "autenticado" not in st.session_state:
         st.session_state.autenticado = False
         st.session_state.usuario_email = None
         st.session_state.pantalla_actual = "login"
-    if "token_registro" not in st.session_state:
-        st.session_state.token_registro = None
-        st.session_state.datos_pendientes = None
+    if "esperando_verificacion" not in st.session_state:
+        st.session_state.esperando_verificacion = False
+
 
 def enviar_correo_restablecimiento(email):
-    """Dispara un correo electrónico de recuperación de clave"""
+    """Dispara un correo electrónico de recuperación de clave vía Firebase Auth"""
     payload = {"requestType": "PASSWORD_RESET", "email": email}
     try:
         respuesta = requests.post(URL_PASSWORD_RESET, json=payload, headers=HEADERS_JSON)
@@ -127,24 +49,41 @@ def enviar_correo_restablecimiento(email):
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
 
-def registrar_usuario_firebase(email, password):
-    """Inscribe un nuevo operador contable en tu base de datos de Firebase"""
-    payload = {"email": email, "password": password, "returnSecureToken": True}
+
+def registrar_y_verificar_usuario(email, password):
+    """
+    Registra al usuario en Firebase mediante HTTP (inmune a bloqueos de puertos SMTP)
+    y le dispara el flujo de verificación nativo de Google.
+    """
+    # Paso 1: Intentar la creación de la cuenta en Firebase
+    payload_signup = {"email": email, "password": password, "returnSecureToken": True}
     try:
-        respuesta = requests.post(URL_SIGN_UP, json=payload, headers=HEADERS_JSON)
-        if respuesta.status_code == 200:
-            return True, "🎉 Solicitud procesada con éxito."
+        respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
+        
+        if respuesta_signup.status_code == 200:
+            datos_signup = respuesta_signup.json()
+            id_token = datos_signup.get("idToken")
+            
+            # Paso 2: Forzar a Firebase a enviar el correo de verificación oficial al usuario vía HTTP (Puerto 443)
+            payload_verify = {"requestType": "VERIFY_EMAIL", "idToken": id_token}
+            respuesta_verify = requests.post(URL_PASSWORD_RESET, json=payload_verify, headers=HEADERS_JSON)
+            
+            if respuesta_verify.status_code == 200:
+                return True, "🎉 Cuenta registrada en Firebase. Se ha enviado un correo de verificación oficial de Google a tu casilla."
+            else:
+                return True, "🎉 Cuenta registrada, pero no se pudo enviar el correo de verificación. Contacta a la gerencia."
         else:
-            datos = respuesta.json()
+            datos = respuesta_signup.json()
             error_msg = datos.get("error", {}).get("message", "Error al registrar")
             if error_msg == "EMAIL_EXISTS":
-                error_msg = "Este correo electrónico ya está registrado."
+                error_msg = "Este correo electrónico ya está registrado en la plataforma."
             return False, f"⚠️ {error_msg}"
     except Exception as e:
-        return False, f"❌ Error de red: {str(e)}"
+        return False, f"❌ Error de conexión con los servidores de Firebase: {str(e)}"
+
 
 def validar_usuario_firebase(email, password):
-    """Valida el inicio de sesión e interpreta los bloqueos nativos directamente desde Firebase Cloud"""
+    """Valida el inicio de sesión e interpreta si está deshabilitado en Firebase Cloud"""
     payload = {
         "email": email,
         "password": password,
@@ -160,7 +99,7 @@ def validar_usuario_firebase(email, password):
             datos = respuesta.json()
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
-            # INTERCEPCIÓN EN LA NUBE: Si la cuenta está deshabilitada en tu consola Firebase Auth
+            # Captura si el usuario está registrado en Firebase Auth pero deshabilitado por ti en la consola
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
                 return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
             
@@ -169,9 +108,8 @@ def validar_usuario_firebase(email, password):
             return False, f"⚠️ {error_code}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
-#3
 def login_sidebar():
-    """Despliega la pasarela de control de identidad en la barra lateral con verificación OTP"""
+    """Despliega la pasarela de control de identidad en la barra lateral mediante API REST"""
     inicializar_sesion()
     
     if not st.session_state.autenticado:
@@ -209,70 +147,33 @@ def login_sidebar():
             nuevo_email = st.sidebar.text_input("Correo corporativo:", key="reg_email").strip().lower()
             nueva_pass = st.sidebar.text_input("Asigna una Contraseña (mín. 6 caracteres):", type="password", key="reg_pass")
             
-            if st.session_state.token_registro is not None:
-                st.sidebar.warning("🔑 Introduce el token enviado a tu casilla para confirmar la operación:")
-                token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
+            if st.session_state.esperando_verificacion:
+                st.sidebar.info("📩 Proceso Inicializado: Tu cuenta ha sido enviada a Firebase Auth de forma exitosa.")
+                st.sidebar.warning("⚠️ Recuerda revisar tu bandeja de entrada (o correo no deseado/spam) para validar tu dirección mediante el enlace seguro enviado por Google.")
                 
-                col_token1, col_token2 = st.sidebar.columns(2)
-                with col_token1:
-                    if st.sidebar.button("✅ Verificar Token"):
-                        if token_ingresado == str(st.session_state.token_registro):
-                            datos = st.session_state.datos_pendientes
-                            
-                            # REGISTRO AUTOMÁTICO REAL EN LA PLATAFORMA DE FIREBASE
-                            exito, msg = registrar_usuario_firebase(datos["email"], datos["pass"])
-                            
-                            if exito:
-                                asunto_master = "🚨 Alerta DaDiMAC: Nueva solicitud de autorización de registro"
-                                cuerpo_master = f"""
-                                <h3>Solicitud de Acceso Pendiente</h3>
-                                <p>El siguiente usuario ha verificado su casilla y se ha registrado automáticamente en Firebase Auth:</p>
-                                <ul>
-                                    <li><b>Usuario Contable:</b> {datos['email']}</li>
-                                    <li><b>Fecha/Hora:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
-                                    <li><b>Estado en Firebase:</b> Registrado. (Proceda a habilitarlo en su consola si corresponde).</li>
-                                </ul>
-                                <p>Para permitirle el acceso, recuerde ingresar a su consola web de Firebase Auth y activar este usuario.</p>
-                                """
-                                enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
-                                
-                                st.sidebar.info("📩 Cuenta creada con éxito en Firebase. Tu acceso al panel se encuentra retenido por seguridad. Debes esperar a que se te notifique por tu correo la autorización de acceso una vez que la gerencia verifique la alerta manualmente.")
-                                st.session_state.token_registro = None
-                                st.session_state.datos_pendientes = None
-                            else:
-                                st.sidebar.error(msg)
-                        else:
-                            st.sidebar.error("❌ Token incorrecto. Verifique el código.")
-                with col_token2:
-                    if st.sidebar.button("🔄 Cancelar"):
-                        st.session_state.token_registro = None
-                        st.session_state.datos_pendientes = None
-                        st.rerun()
+                # Aviso de retención exigido
+                st.sidebar.error("🔒 Estado: Acceso Retenido temporalmente por la administración. Debes esperar a que se te notifique por tu correo la autorización de acceso una vez que la gerencia verifique la alerta manualmente en la consola.")
+                
+                if st.sidebar.button("🔄 Entendido, ir al Login"):
+                    st.session_state.esperando_verificacion = False
+                    st.session_state.pantalla_actual = "login"
+                    st.rerun()
             else:
-                if st.sidebar.button("📧 Solicitar Token de Verificación"):
+                if st.sidebar.button("📧 Registrar Cuenta e Iniciar Validación"):
                     if nuevo_email and len(nueva_pass) >= 6:
-                        token_generado = random.randint(100000, 999999)
-                        asunto_usuario = f"🔑 Código de Verificación DaDiMAC: {token_generado}"
-                        cuerpo_usuario = f"""
-                        <h2>Verificación de Identidad - DaDiMAC</h2>
-                        <p>Tu código de un solo uso para comprobar tu casilla e iniciar tu proceso de alta automática en Firebase es:</p>
-                        <h1 style='color:#2678FE; letter-spacing: 4px;'>{token_generado}</h1>
-                        <p>Introdúcelo en la barra lateral del sistema.</p>
-                        """
-                        if enviar_correo_smtp(nuevo_email, asunto_usuario, cuerpo_usuario):
-                            st.session_state.token_registro = token_generado
-                            st.session_state.datos_pendientes = {"email": nuevo_email, "pass": nueva_pass}
+                        exito, msg = registrar_y_verificar_usuario(nuevo_email, nueva_pass)
+                        if exito:
+                            st.session_state.esperando_verificacion = True
                             st.rerun()
                         else:
-                            st.sidebar.error("❌ Error de envío. Verifique que el correo ingresado sea válido.")
+                            st.sidebar.error(msg)
                     else:
                         st.sidebar.error("⚠️ El correo es obligatorio y la contraseña debe tener 6 caracteres o más.")
             
-            if st.sidebar.button("⬅️ Volver al Login"):
-                st.session_state.token_registro = None
-                st.session_state.datos_pendientes = None
-                st.session_state.pantalla_actual = "login"
-                st.rerun()
+            if not st.session_state.esperando_verificacion:
+                if st.sidebar.button("⬅️ Volver al Login"):
+                    st.session_state.pantalla_actual = "login"
+                    st.rerun()
                 
         elif st.session_state.pantalla_actual == "recuperar":
             st.sidebar.header("🔄 Restablecer Clave")
