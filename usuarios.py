@@ -34,7 +34,7 @@ HEADERS_JSON = {"Content-Type": "application/json"}
 # CONFIGURACIÓN MAESTRA DE MENSAJERÍA PARA CONTROL GERENCIAL
 # =====================================================================
 CORREO_EMISOR = "dadimacalarma@gmail.com"
-PASSWORD_EMISOR = "mcgf ftyv lorg azun"  # Tu contraseña de aplicación de Google de 16 caracteres
+PASSWORD_EMISOR = "mcgfftyvlorgazun"  # Tu contraseña de aplicación de Google de 16 caracteres
 
 # CORREO_MASTER: Tu bandeja personal donde recibirás los accesos pendientes.
 CORREO_MASTER = "dadimacalarma@gmail.com"
