@@ -38,7 +38,7 @@ CORREO_MASTER = "dadimacalarma@gmail.com"
 
 
 def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
-    """Establece conexión directa con el servidor SMTP de Google para despachar alertas"""
+    """Establece conexión con el servidor SMTP de Google con límite de tiempo estricto anti-congelamiento"""
     try:
         msg = MIMEMultipart()
         msg['From'] = CORREO_EMISOR.strip()
@@ -46,15 +46,23 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
         msg['Subject'] = asunto
         msg.attach(MIMEText(cuerpo_html, 'html'))
         
-        server = smtplib.SMTP("://smtp.gmail.com", 587)
+        # AGREGAMOS timeout=5: Si el Firewall bloquea el puerto corporativo, 
+        # el sistema aborta en 5 segundos en lugar de quedarse congelado eternamente.
+        server = smtplib.SMTP("://smtp.gmail.com", 587, timeout=5)
         server.starttls()
+        
         server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
         server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
         server.quit()
         return True
-    except Exception as e:
-        print(f"Falla en la pasarela de mensajería SMTP: {str(e)}")
+    except smtplib.SMTPAuthenticationError:
+        st.sidebar.error("🔑 Error de Autenticación de Gmail: La contraseña de aplicación de 16 caracteres es inválida o caducó.")
         return False
+    except Exception as e:
+        # Esto atrapará el bloqueo de red de Streamlit en segundos y te dirá textually qué pasa
+        st.sidebar.error(f"❌ Conexión SMTP bloqueada por el servidor: {str(e)}")
+        return False
+
 
 
 def inicializar_sesion():
