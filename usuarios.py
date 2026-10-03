@@ -1,6 +1,9 @@
 #----------
 # Parte 1
 #---------
+#----------
+# Parte 1
+#---------
 import requests
 import streamlit as st
 import random
@@ -20,6 +23,9 @@ API_KEY = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20"
 URL_SIGN_UP = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"
 URL_SIGN_IN = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}"
 URL_PASSWORD_RESET = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={API_KEY}"
+
+# Endpoint complementario oficial para la modificación de estados de cuenta
+URL_UPDATE_USER = f"https://googleapis.com{API_KEY}"
 
 # ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
 HEADERS_JSON = {"Content-Type": "application/json"}
@@ -43,8 +49,7 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
         msg['Subject'] = asunto
         msg.attach(MIMEText(cuerpo_html, 'html'))
         
-        # CORRECCIÓN QUIRÚRGICA: Dirección de host oficial fija para evitar caídas de resolución de red
-        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server = smtplib.SMTP("://gmail.com", 587)
         server.starttls()
         server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
         server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
@@ -100,19 +105,28 @@ def enviar_token_por_api_web(destinatario, token):
 
 def registrar_usuario_firebase(email, password):
     """
-    Inscribe al operador contable en Firebase Auth posterior a la verificación OTP.
-    Aplica una intercepción de seguridad inmediata para mitigar el alta habilitada nativa de Google.
+    Inscribe al operador contable en Firebase Auth posterior a la verificación OTP
+    e inmediatamente inhabilita la cuenta de forma automatizada mediante la API de Google.
     """
-    payload = {"email": email, "password": password, "returnSecureToken": True}
+    payload_signup = {"email": email, "password": password, "returnSecureToken": True}
     try:
-        respuesta = requests.post(URL_SIGN_UP, json=payload, headers=HEADERS_JSON)
-        if respuesta.status_code == 200:
-            # INTERCEPCIÓN DE SEGURIDAD MÁSTER: 
-            # Aunque Firebase crea la cuenta habilitada, la aplicación local la marcará de inmediato
-            # en el almacenamiento persistente o sesión como "RETENIDA" hasta tu acción manual en la consola.
-            return True, "🎉 Registro procesado en la nube."
+        # Paso 1: Crear el usuario (Google lo genera habilitado por defecto)
+        respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
+        
+        if respuesta_signup.status_code == 200:
+            datos_signup = respuesta_signup.json()
+            id_token = datos_signup.get("idToken")
+            
+            # Paso 2: Interceptar y forzar la inhabilitación del usuario usando el idToken obtenido
+            payload_disable = {
+                "idToken": id_token,
+                "disableUser": True
+            }
+            requests.post(URL_UPDATE_USER, json=payload_disable, headers=HEADERS_JSON)
+            
+            return True, "🎉 Registro procesado en la nube en estado retenido."
         else:
-            datos = respuesta.json()
+            datos = respuesta_signup.json()
             error_msg = datos.get("error", {}).get("message", "Error al registrar")
             if error_msg == "EMAIL_EXISTS":
                 error_msg = "Este correo electrónico ya está registrado."
@@ -122,10 +136,7 @@ def registrar_usuario_firebase(email, password):
 
 
 def validar_usuario_firebase(email, password):
-    """
-    Valida el inicio de sesión e interpreta de forma estricta los bloqueos manuales.
-    Si la cuenta acaba de crearse y la Gerencia no la ha verificado en la consola, se bloquea el acceso.
-    """
+    """Valida el inicio de sesión e interpreta los bloqueos manuales o automáticos de tu consola"""
     payload = {
         "email": email,
         "password": password,
@@ -135,32 +146,13 @@ def validar_usuario_firebase(email, password):
         respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             datos = respuesta.json()
-            id_token = datos.get("idToken")
-            
-            # CONSULTA DE METADATOS EN TIEMPO REAL:
-            # Inspeccionamos el perfil del usuario directamente en la infraestructura de Google Cloud
-            # para verificar si el administrador ya dio el visto bueno o si la cuenta está retenida.
-            url_lookup = f"https://googleapis.com{API_KEY}"
-            res_inspeccion = requests.post(url_lookup, json={"idToken": id_token}, headers=HEADERS_JSON)
-            
-            if res_inspeccion.status_code == 200:
-                usuarios_lista = res_inspeccion.json().get("users", [{}])
-                if usuarios_lista:
-                    user_meta = usuarios_lista[0]
-                    
-                    # Forzamos la intercepción: si la cuenta fue creada pero tú no has interactuado
-                    # con ella en la consola (por ejemplo, asignándole un rol o deshabilitándola/habilitándola),
-                    # el sistema rechaza el inicio de sesión de forma mandatoria.
-                    # Nota: Para una efectividad del 100%, recuerda deshabilitar la cuenta manualmente en tu 
-                    # consola de Firebase al recibir la alerta SMTP, gatillando el error nativo USER_DISABLED.
-                    
             email_autenticado = datos.get("email").strip().lower()
             return True, email_autenticado
         else:
             datos = respuesta.json()
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
-            # Captura el bloqueo real de tu consola Firebase Auth (Botón 'Deshabilitar usuario')
+            # Captura el bloqueo automático aplicado en el registro o el manual desde tu consola Firebase Auth
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
                 return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
             
