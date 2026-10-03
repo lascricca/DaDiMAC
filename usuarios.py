@@ -33,8 +33,9 @@ def inicializar_sesion():
         st.session_state.pantalla_actual = "login"
     if "esperando_verificacion" not in st.session_state:
         st.session_state.esperando_verificacion = False
-
-#2
+#--------
+# Parte 2
+#--------
 def enviar_correo_restablecimiento(email):
     """Dispara un correo electrónico de recuperación de clave vía Firebase Auth"""
     payload = {"requestType": "PASSWORD_RESET", "email": email}
@@ -52,10 +53,9 @@ def enviar_correo_restablecimiento(email):
 
 def registrar_y_verificar_usuario(email, password):
     """
-    Registra al usuario en Firebase mediante HTTP (inmune a bloqueos de puertos SMTP)
-    y le dispara el flujo de verificación nativo de Google.
+    Registra al usuario en Firebase mediante HTTP
+    y le dispara el flujo de verificación de enlace nativo de Google de forma obligatoria.
     """
-    # Paso 1: Intentar la creación de la cuenta en Firebase
     payload_signup = {"email": email, "password": password, "returnSecureToken": True}
     try:
         respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
@@ -64,14 +64,14 @@ def registrar_y_verificar_usuario(email, password):
             datos_signup = respuesta_signup.json()
             id_token = datos_signup.get("idToken")
             
-            # Paso 2: Forzar a Firebase a enviar el correo de verificación oficial al usuario vía HTTP (Puerto 443)
+            # Forzar a Firebase a enviar el correo con el link de verificación oficial
             payload_verify = {"requestType": "VERIFY_EMAIL", "idToken": id_token}
             respuesta_verify = requests.post(URL_PASSWORD_RESET, json=payload_verify, headers=HEADERS_JSON)
             
             if respuesta_verify.status_code == 200:
-                return True, "🎉 Cuenta registrada en Firebase. Se ha enviado un correo de verificación oficial de Google a tu casilla."
+                return True, "🎉 Cuenta registrada. Es obligatorio que valides el enlace seguro enviado a tu correo antes de poder solicitar la activación."
             else:
-                return True, "🎉 Cuenta registrada, pero no se pudo enviar el correo de verificación. Contacta a la gerencia."
+                return True, "🎉 Cuenta registrada, pero el enlace no se pudo enviar automáticamente. Contacte a soporte."
         else:
             datos = respuesta_signup.json()
             error_msg = datos.get("error", {}).get("message", "Error al registrar")
@@ -79,11 +79,15 @@ def registrar_y_verificar_usuario(email, password):
                 error_msg = "Este correo electrónico ya está registrado en la plataforma."
             return False, f"⚠️ {error_msg}"
     except Exception as e:
-        return False, f"❌ Error de conexión con los servidores de Firebase: {str(e)}"
+        return False, f"❌ Error de conexión con Firebase: {str(e)}"
 
 
 def validar_usuario_firebase(email, password):
-    """Valida el inicio de sesión e interpreta si está deshabilitado en Firebase Cloud"""
+    """
+    Valida el inicio de sesión contra Firebase y verifica de forma estricta:
+    1. Que el usuario haya validado el link enviado a su correo.
+    2. Que la Gerencia lo haya habilitado manualmente en la consola.
+    """
     payload = {
         "email": email,
         "password": password,
@@ -93,22 +97,43 @@ def validar_usuario_firebase(email, password):
         respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             datos = respuesta.json()
+            
+            # ESCUDO 1: Verificar si el usuario ya hizo clic en el link de su correo
+            # La API de Firebase retorna un booleano en el campo 'registered' o requiere inspeccionar el token.
+            # Para asegurar la lectura del estado 'emailVerified' sin decodificar JWT localmente, 
+            # evaluamos la respuesta nativa de la cuenta en el perfil.
+            email_verificado = datos.get("registered", False) 
+            
+            # Hacemos una segunda mini-petición ligera para extraer los metadatos reales del perfil (emailVerified)
+            id_token = datos.get("idToken")
+            url_get_user = f"https://googleapis.com{API_KEY}"
+            res_perfil = requests.post(url_get_user, json={"idToken": id_token}, headers=HEADERS_JSON)
+            
+            if res_perfil.status_code == 200:
+                datos_perfil = res_perfil.json().get("users", [{}])[0]
+                # Si el usuario NO ha validado el enlace de su correo electrónico, se le rebota inmediatamente
+                if not datos_perfil.get("emailVerified", False):
+                    return False, "⚠️ Correo No Validado: Primero debes ingresar a tu bandeja de entrada y hacer clic en el enlace seguro enviado por Google para activar tu cuenta."
+            
             email_autenticado = datos.get("email").strip().lower()
             return True, email_autenticado
+            
         else:
             datos = respuesta.json()
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
-            # Captura si el usuario está registrado en Firebase Auth pero deshabilitado por ti en la consola
+            # ESCUDO 2: Captura si el usuario ya validó su correo pero tú lo mantienes deshabilitado en tu consola Firebase Auth
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
-                return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
+                return False, "🔒 Acceso Retenido: Tu correo ha sido verificado con éxito, pero tu acceso al panel requiere la activación manual de la Gerencia. Se te notificará una vez aprobado."
             
             if error_code in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
                 error_code = "Credenciales incorrectas o inválidas."
             return False, f"⚠️ {error_code}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
-#3
+#--------
+# Parte 3
+#--------
 def login_sidebar():
     """Despliega la pasarela de control de identidad en la barra lateral mediante API REST"""
     inicializar_sesion()
