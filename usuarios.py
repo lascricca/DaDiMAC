@@ -2,6 +2,7 @@ import requests
 import streamlit as st
 import random
 import smtplib
+from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -23,9 +24,8 @@ HEADERS_JSON = {"Content-Type": "application/json"}
 # =====================================================================
 # CONFIGURACIÓN MAESTRA DE MENSAJERÍA PARA CONTROL GERENCIAL
 # =====================================================================
-# CORREO_EMISOR: La casilla dedicada para despachar los tokens dinámicos.
 CORREO_EMISOR = "dadimacalarma@gmail.com"
-PASSWORD_EMISOR = "mcgf ftyv lorg azun"  # Tu contraseña de aplicación de 16 caracteres de Google
+PASSWORD_EMISOR = "mcgf ftyv lorg azun"  # Tu contraseña de aplicación de Google de 16 caracteres
 
 # CORREO_MASTER: Tu bandeja personal donde recibirás los accesos pendientes.
 CORREO_MASTER = "dadimacalarma@gmail.com"
@@ -49,14 +49,13 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
     except Exception as e:
         print(f"Falla en la pasarela de mensajería SMTP: {str(e)}")
         return False
-
+#2
 def inicializar_sesion():
     """Mantiene la persistencia del estado de autenticación en la nube"""
     if "autenticado" not in st.session_state:
         st.session_state.autenticado = False
         st.session_state.usuario_email = None
         st.session_state.pantalla_actual = "login"
-    # Variables de control para el token dinámico de 2FA
     if "token_registro" not in st.session_state:
         st.session_state.token_registro = None
         st.session_state.datos_pendientes = None
@@ -81,7 +80,7 @@ def registrar_usuario_firebase(email, password):
     try:
         respuesta = requests.post(URL_SIGN_UP, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
-            return True, "🎉 Solicitud procesada. Tu cuenta se creó en estado pendiente de aprobación."
+            return True, "🎉 Solicitud procesada con éxito."
         else:
             datos = respuesta.json()
             error_msg = datos.get("error", {}).get("message", "Error al registrar")
@@ -92,22 +91,32 @@ def registrar_usuario_firebase(email, password):
         return False, f"❌ Error de red: {str(e)}"
 
 def validar_usuario_firebase(email, password):
-    """Valida el inicio de sesión contra los servidores en la nube de Firebase"""
-    payload = {"email": email, "password": password, "returnSecureToken": True}
+    """Valida el inicio de sesión e interpreta los bloqueos nativos directamente desde Firebase Cloud"""
+    payload = {
+        "email": email,
+        "password": password,
+        "returnSecureToken": True
+    }
     try:
         respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             datos = respuesta.json()
-            return True, datos.get("email")
+            email_autenticado = datos.get("email").strip().lower()
+            return True, email_autenticado
         else:
             datos = respuesta.json()
-            error_msg = datos.get("error", {}).get("message", "Error de acceso")
-            if error_msg in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
-                error_msg = "Credenciales incorrectas o inválidas."
-            return False, f"⚠️ {error_msg}"
+            error_code = datos.get("error", {}).get("message", "Error de acceso")
+            
+            # INTERCEPCIÓN EN LA NUBE: Si la cuenta está deshabilitada en tu consola Firebase Auth
+            if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
+                return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
+            
+            if error_code in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
+                error_code = "Credenciales incorrectas o inválidas."
+            return False, f"⚠️ {error_code}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
-#2da Parte
+#3
 def login_sidebar():
     """Despliega la pasarela de control de identidad en la barra lateral con verificación OTP"""
     inicializar_sesion()
@@ -144,73 +153,65 @@ def login_sidebar():
                 
         elif st.session_state.pantalla_actual == "registro":
             st.sidebar.header("📝 Registro de Auditor")
-            
-            # Paso A: Capturar los datos iniciales del auditor
             nuevo_email = st.sidebar.text_input("Correo corporativo:", key="reg_email").strip().lower()
             nueva_pass = st.sidebar.text_input("Asigna una Contraseña (mín. 6 caracteres):", type="password", key="reg_pass")
             
-            # Si el token ya fue enviado, desplegamos el input de confirmación inmediatamente
             if st.session_state.token_registro is not None:
-                st.sidebar.info(f"🔑 Se envió un código de verificación a su correo electrónico.")
-                token_ingresado = st.sidebar.text_input("Introduce el token de 6 dígitos:", key="reg_token_input").strip()
+                st.sidebar.warning("🔑 Introduce el token enviado a tu casilla para confirmar la operación:")
+                token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
                 
                 col_token1, col_token2 = st.sidebar.columns(2)
                 with col_token1:
                     if st.sidebar.button("✅ Verificar Token"):
                         if token_ingresado == str(st.session_state.token_registro):
-                            # El correo es verídico. Procedemos con la inscripción física en Firebase
                             datos = st.session_state.datos_pendientes
+                            
+                            # REGISTRO AUTOMÁTICO REAL EN LA PLATAFORMA DE FIREBASE
                             exito, msg = registrar_usuario_firebase(datos["email"], datos["pass"])
                             
                             if exito:
-                                # Paso B: Enviar correo de alerta inmediata al Correo Máster de la Gerencia
                                 asunto_master = "🚨 Alerta DaDiMAC: Nueva solicitud de autorización de registro"
                                 cuerpo_master = f"""
                                 <h3>Solicitud de Acceso Pendiente</h3>
-                                <p>El siguiente usuario ha verificado su casilla de correo y solicita acceso al panel:</p>
+                                <p>El siguiente usuario ha verificado su casilla y se ha registrado automáticamente en Firebase Auth:</p>
                                 <ul>
-                                    <li><b>Usuario:</b> {datos['email']}</li>
-                                    <li><b>Estado de Verificación:</b> Exitoso (2FA Correcto)</li>
+                                    <li><b>Usuario Contable:</b> {datos['email']}</li>
+                                    <li><b>Fecha/Hora:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
+                                    <li><b>Estado en Firebase:</b> Registrado. (Proceda a habilitarlo en su consola si corresponde).</li>
                                 </ul>
-                                <p>Por favor, ingrese a la consola de Firebase o use su módulo de gestión para activarlo si corresponde.</p>
+                                <p>Para permitirle el acceso, recuerde ingresar a su consola web de Firebase Auth y activar este usuario.</p>
                                 """
                                 enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
                                 
-                                st.sidebar.success("🎉 ¡Correo verificado! Solicitud enviada a la gerencia.")
-                                # Limpiamos los estados de control temporales
+                                st.sidebar.info("📩 Cuenta creada con éxito en Firebase. Tu acceso al panel se encuentra retenido por seguridad. Debes esperar a que se te notifique por tu correo la autorización de acceso una vez que la gerencia verifique la alerta manualmente.")
                                 st.session_state.token_registro = None
                                 st.session_state.datos_pendientes = None
-                                st.session_state.pantalla_actual = "login"
-                                st.rerun()
                             else:
                                 st.sidebar.error(msg)
                         else:
-                            st.sidebar.error("❌ Token incorrecto o vencido. Verifique el código.")
-                with col_btn2:
-                    if st.sidebar.button("🔄 Reenviar Correo"):
+                            st.sidebar.error("❌ Token incorrecto. Verifique el código.")
+                with col_token2:
+                    if st.sidebar.button("🔄 Cancelar"):
                         st.session_state.token_registro = None
+                        st.session_state.datos_pendientes = None
                         st.rerun()
             else:
-                # Flujo Inicial: El usuario solicita el envío de su token de validación
                 if st.sidebar.button("📧 Solicitar Token de Verificación"):
                     if nuevo_email and len(nueva_pass) >= 6:
-                        # Generamos un número aleatorio criptográfico seguro de 6 posiciones
                         token_generado = random.randint(100000, 999999)
-                        
                         asunto_usuario = f"🔑 Código de Verificación DaDiMAC: {token_generado}"
                         cuerpo_usuario = f"""
                         <h2>Verificación de Identidad - DaDiMAC</h2>
-                        <p>Estás intentando registrarte como auditor en la plataforma corporativa. Tu código de verificación de un solo uso es:</p>
+                        <p>Tu código de un solo uso para comprobar tu casilla e iniciar tu proceso de alta automática en Firebase es:</p>
                         <h1 style='color:#2678FE; letter-spacing: 4px;'>{token_generado}</h1>
-                        <p>Introduce este código en la barra lateral del sistema para continuar con el proceso de aprobación.</p>
+                        <p>Introdúcelo en la barra lateral del sistema.</p>
                         """
-                        # Enviamos el token al correo proporcionado por el auditor
                         if enviar_correo_smtp(nuevo_email, asunto_usuario, cuerpo_usuario):
                             st.session_state.token_registro = token_generado
                             st.session_state.datos_pendientes = {"email": nuevo_email, "pass": nueva_pass}
                             st.rerun()
                         else:
-                            st.sidebar.error("❌ Error de envío. Verifique que el correo ingresado sea real y válido.")
+                            st.sidebar.error("❌ Error de envío. Verifique que el correo ingresado sea válido.")
                     else:
                         st.sidebar.error("⚠️ El correo es obligatorio y la contraseña debe tener 6 caracteres o más.")
             
@@ -248,4 +249,3 @@ def login_sidebar():
             st.session_state.pantalla_actual = "login"
             st.rerun()
         return True
-
