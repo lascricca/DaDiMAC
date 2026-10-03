@@ -116,18 +116,19 @@ def registrar_usuario_firebase(email, password):
     """
     payload_signup = {"email": email, "password": password, "returnSecureToken": True}
     try:
-        # Paso 1: Crear el usuario (Google lo genera habilitado por defecto)
+        # Paso 1: Crear el usuario usando tu URL oficial de la Parte 1
         respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
         
         if respuesta_signup.status_code == 200:
             datos_signup = respuesta_signup.json()
             id_token = datos_signup.get("idToken")
             
-            # Paso 2: Interceptar y forzar la inhabilitación del usuario usando el idToken obtenido
+            # Paso 2: Forzar la inhabilitación del usuario usando el idToken obtenido
             payload_disable = {
                 "idToken": id_token,
                 "disableUser": True
             }
+            # Usamos estrictamente la URL oficial de actualización definida en la Parte 1
             requests.post(URL_UPDATE_USER, json=payload_disable, headers=HEADERS_JSON)
             
             return True, "🎉 Registro procesado en la nube en estado retenido."
@@ -149,6 +150,7 @@ def validar_usuario_firebase(email, password):
         "returnSecureToken": True
     }
     try:
+        # Usamos tu URL oficial de inicio de sesión de la Parte 1
         respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
         if respuesta.status_code == 200:
             datos = respuesta.json()
