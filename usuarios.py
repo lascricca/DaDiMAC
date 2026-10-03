@@ -16,12 +16,12 @@ from email.mime.multipart import MIMEMultipart
 # 1. Coloca aquí tu Web API Key (la encuentras en Firebase Console -> Configuración del proyecto)
 API_KEY = "AIzaSyD8DMID7FFGdBEor0Wmiw7yOqVBZbWSe20" 
 
-# 2. URLs oficiales y completas para la API REST de Firebase Auth
+# 2. URLs oficiales y completas para la API REST de Firebase Auth (Sintaxis Estricta Sincronizada)
 URL_SIGN_UP = f"https://googleapis.com{API_KEY}"
 URL_SIGN_IN = f"https://googleapis.com{API_KEY}"
 URL_PASSWORD_RESET = f"https://googleapis.com{API_KEY}"
 
-# CORRECCIÓN DEFINITIVA: Se asegura la estructura exacta de la URL de actualización con su barra diagonal obligatoria
+# Endpoint complementario oficial para la modificación de estados de cuenta
 URL_UPDATE_USER = f"https://googleapis.com{API_KEY}"
 
 # ENCABEZADO OBLIGATORIO DE RED PARA EL FIREWALL DE GOOGLE CLOUD
