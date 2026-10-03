@@ -1,9 +1,6 @@
 #----------
 # Parte 1
 #---------
-#----------
-# Parte 1
-#---------
 import requests
 import streamlit as st
 import random
@@ -259,8 +256,8 @@ def login_sidebar():
                             st.session_state.token_registro = token_generado
                             st.session_state.datos_pendientes = {"email": nuevo_email, "pass": nueva_pass}
                             st.rerun()
-                        else:
-                            st.sidebar.error("❌ Error al despachar el correo de validación. Verifique sus credenciales SMTP.")
+                        # ELIMINÉ EL 'ELSE' QUE PINTABA EL MENSAJE GENÉRICO FIJO
+
                     else:
                         st.sidebar.error("⚠️ El correo es obligatorio y la contraseña debe tener 6 caracteres o más.")
             
