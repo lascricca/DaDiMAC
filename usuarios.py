@@ -50,33 +50,58 @@ CORREO_MASTER = "dadimacalarma@gmail.com"
 #         print(f"Falla en la pasarela de mensajería SMTP: {str(e)}")
 #         return False
 #----------------------
+# def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
+#     """Establece conexión directa con el servidor SMTP de Google y diagnostica fallas en vivo"""
+#     try:
+#         msg = MIMEMultipart()
+#         msg['From'] = CORREO_EMISOR
+#         msg['To'] = destinatario
+#         msg['Subject'] = asunto
+#         msg.attach(MIMEText(cuerpo_html, 'html'))
+        
+#         # Conexión cifrada TLS obligatoria con Google
+#         server = smtplib.SMTP('://gmail.com', 587)
+#         server.starttls()
+#         server.login(CORREO_EMISOR, PASSWORD_EMISOR)
+#         server.sendmail(CORREO_EMISOR, destinatario, msg.as_string())
+#         server.quit()
+#         return True
+#     except smtplib.SMTPAuthenticationError:
+#         # Alerta específica si la Contraseña de Aplicación fue rechazada por Google
+#         st.sidebar.error("🔑 Error de Autenticación de Google: La contraseña de aplicación de 16 caracteres (App Password) es inválida o expiró. Por favor genera una nueva en tu cuenta de Google.")
+#         return False
+#     except Exception as e:
+#         # Muestra en la barra lateral el error exacto del servidor en la nube
+#         st.sidebar.error(f"❌ Error de red SMTP: {str(e)}")
+#         return False
+
+#-----------------------
 def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
-    """Establece conexión directa con el servidor SMTP de Google y diagnostica fallas en vivo"""
+    """Establece conexión limpia con el host oficial de Google para despacho de tokens"""
     try:
         msg = MIMEMultipart()
-        msg['From'] = CORREO_EMISOR
-        msg['To'] = destinatario
+        msg['From'] = CORREO_EMISOR.strip()
+        msg['To'] = destinatario.strip()
         msg['Subject'] = asunto
         msg.attach(MIMEText(cuerpo_html, 'html'))
         
-        # Conexión cifrada TLS obligatoria con Google
-        server = smtplib.SMTP('://gmail.com', 587)
+        # Forzamos la dirección oficial limpia de Google Gmail sin espacios ni caracteres ocultos
+        host_smtp = "://gmail.com"
+        
+        server = smtplib.SMTP(host_smtp, 587)
         server.starttls()
-        server.login(CORREO_EMISOR, PASSWORD_EMISOR)
-        server.sendmail(CORREO_EMISOR, destinatario, msg.as_string())
+        server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
+        server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
         server.quit()
         return True
     except smtplib.SMTPAuthenticationError:
-        # Alerta específica si la Contraseña de Aplicación fue rechazada por Google
-        st.sidebar.error("🔑 Error de Autenticación de Google: La contraseña de aplicación de 16 caracteres (App Password) es inválida o expiró. Por favor genera una nueva en tu cuenta de Google.")
+        st.sidebar.error("🔑 Error de Autenticación: La contraseña de aplicación (App Password) fue rechazada por Google. Verifica que siga activa.")
         return False
     except Exception as e:
-        # Muestra en la barra lateral el error exacto del servidor en la nube
-        st.sidebar.error(f"❌ Error de red SMTP: {str(e)}")
+        st.sidebar.error(f"❌ Error de resolución de red: {str(e)}")
         return False
 
 #-----------------------
-
 #2
 def inicializar_sesion():
     """Mantiene la persistencia del estado de autenticación en la nube"""
