@@ -119,10 +119,11 @@ def validar_usuario_firebase(email, password):
 #--------
 def login_sidebar():
     """Despliega la pasarela de control de identidad con verificación estricta de Token previo a Firebase"""
+    # SE ENFORZA LA INICIALIZACIÓN INMEDIATA EN LA PRIMERA LÍNEA
     inicializar_sesion()
     
-    if not st.session_state.autenticado:
-        if st.session_state.pantalla_actual == "login":
+    if not st.session_state.get("autenticado", False):
+        if st.session_state.get("pantalla_actual", "login") == "login":
             st.sidebar.header("🔐 Acceso DaDiMAC (Firebase Cloud)")
             email = st.sidebar.text_input("Correo electrónico:", key="auth_email").strip().lower()
             password = st.sidebar.text_input("Contraseña:", type="password", key="auth_pass")
@@ -151,21 +152,21 @@ def login_sidebar():
                 st.session_state.pantalla_actual = "recuperar"
                 st.rerun()
                 
-        elif st.session_state.pantalla_actual == "registro":
+        elif st.session_state.get("pantalla_actual") == "registro":
             st.sidebar.header("📝 Registro de Auditor")
             nuevo_email = st.sidebar.text_input("Correo corporativo:", key="reg_email").strip().lower()
             nueva_pass = st.sidebar.text_input("Asigna una Contraseña (mín. 6 caracteres):", type="password", key="reg_pass")
             
-            # Si el token ya fue enviado, exigimos su verificación ANTES de registrar en Firebase
-            if st.session_state.token_registro is not None:
+            # BLINDAJE ANTI-KEYERROR: Se usa .get() para evitar caídas del sistema
+            if st.session_state.get("token_registro") is not None:
                 st.sidebar.warning("🔑 Introduce el token enviado a tu casilla para confirmar la operación:")
                 token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
                 
                 col_token1, col_token2 = st.sidebar.columns(2)
                 with col_token1:
                     if st.sidebar.button("✅ Verificar Token"):
-                        if token_ingresado == str(st.session_state.token_registro):
-                            datos = st.session_state.datos_pendientes
+                        if token_ingresado == str(st.session_state.get("token_registro")):
+                            datos = st.session_state.get("datos_pendientes")
                             
                             # PASO CRÍTICO: RECIÉN AQUÍ SE REALIZA LA CREACIÓN FÍSICA EN FIREBASE
                             exito, msg = registrar_usuario_firebase(datos["email"], datos["pass"])
@@ -220,13 +221,12 @@ def login_sidebar():
                 st.session_state.pantalla_actual = "login"
                 st.rerun()
                 
-        elif st.session_state.pantalla_actual == "recuperar":
+        elif st.session_state.get("pantalla_actual") == "recuperar":
             st.sidebar.header("🔄 Restablecer Clave")
             email_recup = st.sidebar.text_input("Introduce tu Correo registrado:", key="rec_email_input").strip().lower()
             
             if st.sidebar.button("🚀 Enviar Enlace Seguro"):
                 if email_recup:
-                    # Implementación nativa de reseteo por Firebase API
                     payload = {"requestType": "PASSWORD_RESET", "email": email_recup}
                     res = requests.post(URL_PASSWORD_RESET, json=payload, headers=HEADERS_JSON)
                     if res.status_code == 200:
@@ -242,7 +242,7 @@ def login_sidebar():
                 
         return False
     else:
-        st.sidebar.success(f"👤 Sesión Activa\n{st.session_state.usuario_email}")
+        st.sidebar.success(f"👤 Sesión Activa\n{st.session_state.get('usuario_email')}")
         st.sidebar.caption("🔒 Autenticación en la Nube vía Firebase")
         if st.sidebar.button("🔒 Cerrar Sesión"):
             st.session_state.autenticado = False
@@ -250,4 +250,3 @@ def login_sidebar():
             st.session_state.pantalla_actual = "login"
             st.rerun()
         return True
-
