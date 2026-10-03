@@ -108,6 +108,7 @@ def validar_usuario_firebase(email, password):
             return False, f"⚠️ {error_code}"
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
+#3
 def login_sidebar():
     """Despliega la pasarela de control de identidad en la barra lateral mediante API REST"""
     inicializar_sesion()
@@ -159,6 +160,7 @@ def login_sidebar():
                     st.session_state.pantalla_actual = "login"
                     st.rerun()
             else:
+                # CAMBIO CRÍTICO: Se elimina el flujo SMTP y se invoca la validación nativa HTTP de Firebase
                 if st.sidebar.button("📧 Registrar Cuenta e Iniciar Validación"):
                     if nuevo_email and len(nueva_pass) >= 6:
                         exito, msg = registrar_y_verificar_usuario(nuevo_email, nueva_pass)
