@@ -97,25 +97,26 @@ def enviar_token_por_api_web(destinatario, token):
 def registrar_usuario_firebase(email, password):
     """
     Inscribe al operador contable en Firebase Auth posterior a la verificación OTP
-    e inmediatamente inhabilita la cuenta de forma automatizada mediante la API de Google.
+    e inmediatamente fuerza la inhabilitación de la cuenta enviando el localId y el idToken.
     """
     payload_signup = {"email": email, "password": password, "returnSecureToken": True}
     try:
-        # Paso 1: Crear el usuario usando tu URL oficial de la Parte 1 (AQUÍ SÍ FUNCIONA)
+        # Paso 1: Crear el usuario usando tu URL oficial de la Parte 1
         respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
         
         if respuesta_signup.status_code == 200:
             datos_signup = respuesta_signup.json()
             id_token = datos_signup.get("idToken")
+            uid_usuario = datos_signup.get("localId")  # Capturamos el UID físico asignado por Google
             
-            # Paso 2: Forzar la inhabilitación del usuario
+            # Paso 2: Estructura corregida para forzar la inhabilitación administrativa inmediata
             payload_disable = {
                 "idToken": id_token,
+                "localId": uid_usuario,  # SE INCLUYE EL UID OBLIGATORIO PARA IDENTIFICAR LA CUENTA A MODIFICAR
                 "disableUser": True
             }
             
-            # CORRECCIÓN GERENCIAL CRÍTICA: Cambiamos cualquier URL hardcodeada vieja 
-            # y llamamos estrictamente a la variable global URL_UPDATE_USER de la Parte 1
+            # Se ejecuta el impacto formal en el endpoint oficial de Identity Toolkit
             requests.post(URL_UPDATE_USER, json=payload_disable, headers=HEADERS_JSON)
             
             return True, "🎉 Registro procesado en la nube en estado retenido."
