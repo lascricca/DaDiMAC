@@ -94,11 +94,14 @@ def enviar_token_por_api_web(destinatario, token):
     return enviar_correo_smtp(destinatario, asunto, cuerpo_html)
 
 
-def registrar_usuario_(email, password):
+def registrar_usuario_firebase(email, password):
     """
     Utiliza el SDK de administración sugerido para crear al usuario 
     directamente en estado DESHABILITADO de nacimiento, blindando la seguridad.
     """
+    # IMPORTACIÓN LOCAL: Evita colisiones de nombres en Python 3.14
+    from firebase_admin import auth
+    
     try:
         user = auth.create_user(
             email=email.strip().lower(),
@@ -112,7 +115,8 @@ def registrar_usuario_(email, password):
         return False, "⚠️ Este correo electrónico ya está registrado."
     except Exception as e:
         error_msg = str(e).split(":")[-1].strip() if ":" in str(e) else str(e)
-        return False, f"❌ Error administrativo de : {error_msg}"
+        return False, f"❌ Error administrativo de Firebase: {error_msg}"
+
 
 
 def validar_usuario_(email, password):
