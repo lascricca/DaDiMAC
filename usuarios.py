@@ -97,12 +97,19 @@ def enviar_token_por_api_web(destinatario, token):
 def registrar_usuario_firebase(email, password):
     """
     Utiliza el SDK de administración sugerido para crear al usuario 
-    directamente en estado DESHABILITADO de nacimiento, blindando la seguridad.
+    directamente en estado DESHABILITADO, garantizando la inicialización del SDK.
     """
-    # IMPORTACIÓN LOCAL: Evita colisiones de nombres en Python 3.14
-    from firebase_admin import auth
+    import firebase_admin
+    from firebase_admin import credentials, auth
     
     try:
+        # BLINDAJE DE SEGURIDAD: Si la app no existe en este hilo de Streamlit, la inicializamos en el acto
+        if not firebase_admin._apps:
+            credenciales_dict = dict(st.secrets["firebase"])
+            cred = credentials.Certificate(credenciales_dict)
+            firebase_admin.initialize_app(cred)
+            
+        # Ejecución segura del alta en estado retenido
         user = auth.create_user(
             email=email.strip().lower(),
             email_verified=False,
@@ -116,8 +123,6 @@ def registrar_usuario_firebase(email, password):
     except Exception as e:
         error_msg = str(e).split(":")[-1].strip() if ":" in str(e) else str(e)
         return False, f"❌ Error administrativo de Firebase: {error_msg}"
-
-
 
 def validar_usuario_(email, password):
     """
