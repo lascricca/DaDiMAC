@@ -206,7 +206,7 @@ def login_sidebar():
             with col_btn1:
                 if st.sidebar.button("🔓 Entrar"):
                     if email and password:
-                        exito, email_retornado = validar_usuario_(email, password)
+                        exito, email_retornado = validar_usuario_firebase(email, password)
                         if exito:
                             st.session_state.autenticado = True
                             st.session_state.usuario_email = email_retornado
@@ -237,7 +237,7 @@ def login_sidebar():
                 token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
                 
                 col_token1, col_token2 = st.sidebar.columns(2)
-                 with col_token1:
+                with col_token1:
                     if st.sidebar.button("✅ Verificar Token"):
                         if token_ingresado == str(st.session_state.get("token_registro")):
                             # RECONSTRUCCIÓN CON BLINDAJE: Extraemos la información de persistencia
