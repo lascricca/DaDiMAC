@@ -205,11 +205,10 @@ def login_sidebar():
                 st.sidebar.warning("🔑 Introduce el token enviado a tu casilla para confirmar la operación:")
                 token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
                 
-                col_token1, col_token2 = st.sidebar.columns(2)
-                with col_token1:
+                col_token1, col_token2 = st.sidebar.columns(2)                with col_token1:
                     if st.sidebar.button("✅ Verificar Token"):
                         if token_ingresado == str(st.session_state.get("token_registro")):
-                            # RECONSTRUCCIÓN CON BLINDAJE: Si la sesión se limpió, extraemos de los campos físicos directos
+                            # RECONSTRUCCIÓN CON BLINDAJE: Extraemos la información de persistencia
                             datos_temporales = st.session_state.get("datos_pendientes")
                             email_final = datos_temporales["email"] if datos_temporales else nuevo_email
                             pass_final = datos_temporales["pass"] if datos_temporales else nueva_pass
@@ -218,25 +217,29 @@ def login_sidebar():
                                 st.sidebar.error("⚠️ Error de persistencia: Por favor, intente solicitar un nuevo token.")
                                 return False
                             
-                            # PASO CRÍTICO: Creación física en Firebase en estado deshabilitado (Nativo SDK)
+                            # =====================================================================
+                            # 🚨 ENVIAR CORREO GERENCIAL PRIMERO (Blindado contra re-renders de Streamlit)
+                            # =====================================================================
+                            asunto_master = "🚨 Alerta DaDiMAC: Nueva solicitud de autorización de registro"
+                            cuerpo_master = f"""
+                            <h3>Solicitud de Acceso Pendiente</h3>
+                            <p>El siguiente usuario ha validado su correo con el Token OTP de 6 dígitos:</p>
+                            <ul>
+                                <li><b>Usuario Contable:</b> {email_final}</li>
+                                <li><b>Verificación OTP:</b> Exitosa (Código Correcto)</li>
+                                <li><b>Fecha/Hora:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
+                            </ul>
+                            <p>El sistema procederá a inscribirlo en estado retenido. Recuerde habilitarlo manualmente en la consola Auth.</p>
+                            """
+                            # Despachamos a tu bandeja máster antes de tocar los servidores de Firebase
+                            enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
+                            
+                            # =====================================================================
+                            # PASO CRÍTICO: Creación física en Firebase en estado deshabilitado
+                            # =====================================================================
                             exito, msg = registrar_usuario_firebase(email_final, pass_final)
                             
                             if exito:
-                                # ARMADO INALTERABLE DEL CUERPO DEL CORREO GERENCIAL
-                                asunto_master = "🚨 Alerta DaDiMAC: Nueva solicitud de autorización de registro"
-                                cuerpo_master = f"""
-                                <h3>Solicitud de Acceso Pendiente</h3>
-                                <p>El siguiente usuario ha validado su correo con el Token OTP y ha sido creado en Firebase:</p>
-                                <ul>
-                                    <li><b>Usuario Contable:</b> {email_final}</li>
-                                    <li><b>Verificación OTP:</b> Exitosa (6 Dígitos Correctos)</li>
-                                    <li><b>Fecha/Hora:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
-                                </ul>
-                                <p>Para permitirle el acceso, recuerde ingresar a su consola web de Firebase Auth y activarlo/habilitarlo manualmente.</p>
-                                """
-                                # Forzado de despacho SMTP por IP directa sin interrupciones lógicas
-                                enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
-                                
                                 st.sidebar.success("🎉 ¡Correo verificado e inscrito en Firebase!")
                                 st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
                                 
@@ -246,6 +249,7 @@ def login_sidebar():
                                 st.sidebar.error(msg)
                         else:
                             st.sidebar.error("❌ Token incorrecto. Verifique el código.")
+
                 with col_token2:
                     if st.sidebar.button("🔄 Cancelar"):
                         st.session_state.token_registro = None
