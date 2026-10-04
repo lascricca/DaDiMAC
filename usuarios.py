@@ -179,7 +179,7 @@ def validar_usuario_firebase(email, password):
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
-                return False, "🔒 Acceso Retenido: Tu cuenta está ya está registrada, pero requiere de la autorización de la Gerencia. Por favor, notificar por WhatsApp +507 6276.5611 para otorgar acceso."
+                return False, "🔒 Acceso Retenido: Tu cuenta ya está registrada, pero requiere de la autorización de la Gerencia. Por favor, notificar por WhatsApp +507 6276.5611 para otorgar acceso."
             
             if error_code in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
                 error_code = "Credenciales incorrectas o inválidas."
@@ -259,7 +259,7 @@ def login_sidebar():
                                 <li><b>Verificación OTP:</b> Exitosa (Código Correcto)</li>
                                 <li><b>Fecha/Hora:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
                             </ul>
-                            <p>El sistema procederá a inscribirlo en estado retenido. Recuerde habilitarlo manualmente en la consola Auth.</p>
+                            <p>El sistema procederá a inscribirlo en estado retenido. Recuerde habilitarlo.</p>
                             """
                             enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
                             
@@ -269,7 +269,7 @@ def login_sidebar():
                             # INTERCEPCIÓN GERENCIAL: Si la creación fue exitosa o devolvió el código de bloqueo preventivo
                             if exito or "USER_DISABLED" in msg or "ADMIN_DISABLED" in msg:
                                 st.sidebar.success("🎉 ¡Correo verificado e inscrito en Cloud Server!")
-                                st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
+                                st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia habilite su acceso. Puede notificar por WhatsApp +507 6276.5611.")
                                 
                                 st.session_state.token_registro = None
                                 st.session_state.datos_pendientes = None
