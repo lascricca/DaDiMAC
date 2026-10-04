@@ -232,8 +232,8 @@ def login_sidebar():
                             enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
                             
                             # 2. PASO CRÍTICO: Creación física en  en estado deshabilitado (Nativo SDK)
-                            exito, msg = registrar_usuario_(email_final, pass_final)
-                            
+                            exito, msg = registrar_usuario_firebase(email_final, pass_final)
+
                             if exito:
                                 st.sidebar.success("🎉 ¡Correo verificado e inscrito en !")
                                 st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
