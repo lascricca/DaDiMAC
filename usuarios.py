@@ -42,6 +42,11 @@ CORREO_MASTER = "dadimacalarma@gmail.com"
 
 def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
     """Conexión por IP directa para saltar de raíz el bloqueo de nombres DNS de Streamlit Cloud"""
+    # CONTROL DE SINTAXIS PREVIO: Detecta si el correo no tiene un formato válido básico
+    if "@" not in destinatario or "#" in destinatario or " " in destinatario:
+        st.sidebar.error("⚠️ Correo inválido o mal escrito.")
+        return False
+
     try:
         msg = MIMEMultipart()
         msg['From'] = CORREO_EMISOR.strip()
@@ -49,22 +54,28 @@ def enviar_correo_smtp(destinatario, asunto, cuerpo_html):
         msg['Subject'] = asunto
         msg.attach(MIMEText(cuerpo_html, 'html'))
         
-        # SOLUCIÓN DE INGENIERÍA: Usamos la IP principal del cluster SMTP de Google (GMR-MX)
-        # Esto salta el NameResolutionError ya que no requiere consultar '://gmail.com' al DNS corporativo
         host_ip_directo = "64.233.186.108" 
         
         server = smtplib.SMTP(host_ip_directo, 587, timeout=10)
         server.starttls()
-        
         server.login(CORREO_EMISOR.strip(), PASSWORD_EMISOR.strip())
         server.sendmail(CORREO_EMISOR.strip(), destinatario.strip(), msg.as_string())
         server.quit()
         return True
     except smtplib.SMTPAuthenticationError:
-        st.sidebar.error("🔑 Error de Autenticación de Gmail: La contraseña de aplicación de 16 caracteres es inválida o caducó.")
+        st.sidebar.error("🔑 Error de Autenticación de Gmail: Contraseña de aplicación inválida o caducó.")
+        return False
+    except smtplib.SMTPRecipientsRefused:
+        # CAPTURA QUIRÚRGICA: Si el servidor SMTP rechaza el correo del destinatario por sintaxis rfc 5321
+        st.sidebar.error("⚠️ Correo inválido o mal escrito.")
         return False
     except Exception as e:
-        st.sidebar.error(f"❌ Conexión SMTP rechazada por el perímetro: {str(e)}")
+        # Filtro secundario por si el error se reporta como excepción general
+        error_str = str(e)
+        if "553" in error_str or "5.1.3" in error_str or "not a valid" in error_str:
+            st.sidebar.error("⚠️ Correo inválido o mal escrito.")
+        else:
+            st.sidebar.error(f"❌ Conexión SMTP rechazada por el perímetro: {error_str}")
         return False
 
 
