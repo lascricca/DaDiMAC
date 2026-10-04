@@ -58,7 +58,9 @@ if usuarios.login_sidebar():
         lista_companias_disponibles = sorted(df_completo['Compañía'].unique())
         
         # Por defecto cargamos la primera compañía para mantener la UI activa de forma elegante
-        valores_defecto_emp = [lista_companias_disponibles[0]] if lista_companias_disponibles else []
+        #valores_defecto_emp = [lista_companias_disponibles[0]] if lista_companias_disponibles else []
+        valores_defecto_emp = lista_companias_disponibles if lista_companias_disponibles else []
+
 
         companias_seleccionadas = st.sidebar.multiselect(
             "Selecciona empresas a evaluar:",
