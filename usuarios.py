@@ -158,7 +158,7 @@ def registrar_usuario_firebase(email, password):
         # Salvaguarda final por si el texto viene inyectado dentro de la excepción de red
         if "USER_DISABLED" in error_str or "ADMIN_DISABLED" in error_str:
             return True, "🎉 Registro procesado en la nube en estado retenido."
-        return False, f"❌ Error de red con los servidores de Firebase: {error_str}"
+        return False, f"❌ Error de red con los Cloud Servers: {error_str}"
 
 
 def validar_usuario_firebase(email, password):
@@ -179,7 +179,7 @@ def validar_usuario_firebase(email, password):
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
-                return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
+                return False, "🔒 Acceso Retenido: Tu cuenta está ya está registrada, pero requiere de la autorización de la Gerencia. Por favor, notificar por WhatsApp +507 6276.5611 para otorgar acceso."
             
             if error_code in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
                 error_code = "Credenciales incorrectas o inválidas."
@@ -268,7 +268,7 @@ def login_sidebar():
                             
                             # INTERCEPCIÓN GERENCIAL: Si la creación fue exitosa o devolvió el código de bloqueo preventivo
                             if exito or "USER_DISABLED" in msg or "ADMIN_DISABLED" in msg:
-                                st.sidebar.success("🎉 ¡Correo verificado e inscrito en Firebase!")
+                                st.sidebar.success("🎉 ¡Correo verificado e inscrito en Cloud Server!")
                                 st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
                                 
                                 st.session_state.token_registro = None
