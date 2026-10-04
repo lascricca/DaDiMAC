@@ -231,7 +231,7 @@ def login_sidebar():
                 token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
                 
                 col_token1, col_token2 = st.sidebar.columns(2)
-                with col_token1:
+                 with col_token1:
                     if st.sidebar.button("✅ Verificar Token"):
                         if token_ingresado == str(st.session_state.get("token_registro")):
                             # RECONSTRUCCIÓN CON BLINDAJE: Extraemos la información de persistencia
@@ -243,7 +243,7 @@ def login_sidebar():
                                 st.sidebar.error("⚠️ Error de persistencia: Por favor, intente solicitar un nuevo token.")
                                 return False
                             
-                            # 1. ENVIAR CORREO GERENCIAL PRIMERO (Blindado contra re-renders de Streamlit)
+                            # 1. ENVIAR CORREO GERENCIAL PRIMERO (Garantiza el despacho inmediato)
                             asunto_master = "🚨 Alerta DaDiMAC: Nueva solicitud de autorización de registro"
                             cuerpo_master = f"""
                             <h3>Solicitud de Acceso Pendiente</h3>
@@ -255,14 +255,14 @@ def login_sidebar():
                             </ul>
                             <p>El sistema procederá a inscribirlo en estado retenido. Recuerde habilitarlo manualmente en la consola Auth.</p>
                             """
-                            # Despachamos a tu bandeja máster antes de tocar los servidores de 
                             enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
                             
-                            # 2. PASO CRÍTICO: Creación física en  en estado deshabilitado (Nativo SDK)
+                            # 2. PASO CRÍTICO: Creación física en Firebase en estado deshabilitado
                             exito, msg = registrar_usuario_firebase(email_final, pass_final)
-
-                            if exito:
-                                st.sidebar.success("🎉 ¡Correo verificado e inscrito en !")
+                            
+                            # INTERCEPCIÓN GERENCIAL: Si la creación fue exitosa o devolvió el código de bloqueo preventivo
+                            if exito or "USER_DISABLED" in msg or "ADMIN_DISABLED" in msg:
+                                st.sidebar.success("🎉 ¡Correo verificado e inscrito en Firebase!")
                                 st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
                                 
                                 st.session_state.token_registro = None
