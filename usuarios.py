@@ -205,7 +205,8 @@ def login_sidebar():
                 st.sidebar.warning("🔑 Introduce el token enviado a tu casilla para confirmar la operación:")
                 token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
                 
-                col_token1, col_token2 = st.sidebar.columns(2)                with col_token1:
+                col_token1, col_token2 = st.sidebar.columns(2)
+                with col_token1:
                     if st.sidebar.button("✅ Verificar Token"):
                         if token_ingresado == str(st.session_state.get("token_registro")):
                             # RECONSTRUCCIÓN CON BLINDAJE: Extraemos la información de persistencia
@@ -217,9 +218,7 @@ def login_sidebar():
                                 st.sidebar.error("⚠️ Error de persistencia: Por favor, intente solicitar un nuevo token.")
                                 return False
                             
-                            # =====================================================================
-                            # 🚨 ENVIAR CORREO GERENCIAL PRIMERO (Blindado contra re-renders de Streamlit)
-                            # =====================================================================
+                            # 1. ENVIAR CORREO GERENCIAL PRIMERO (Blindado contra re-renders de Streamlit)
                             asunto_master = "🚨 Alerta DaDiMAC: Nueva solicitud de autorización de registro"
                             cuerpo_master = f"""
                             <h3>Solicitud de Acceso Pendiente</h3>
@@ -234,9 +233,7 @@ def login_sidebar():
                             # Despachamos a tu bandeja máster antes de tocar los servidores de Firebase
                             enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
                             
-                            # =====================================================================
-                            # PASO CRÍTICO: Creación física en Firebase en estado deshabilitado
-                            # =====================================================================
+                            # 2. PASO CRÍTICO: Creación física en Firebase en estado deshabilitado (Nativo SDK)
                             exito, msg = registrar_usuario_firebase(email_final, pass_final)
                             
                             if exito:
@@ -249,7 +246,7 @@ def login_sidebar():
                                 st.sidebar.error(msg)
                         else:
                             st.sidebar.error("❌ Token incorrecto. Verifique el código.")
-
+                
                 with col_token2:
                     if st.sidebar.button("🔄 Cancelar"):
                         st.session_state.token_registro = None
