@@ -94,13 +94,16 @@ def inicializar_sesion():
 #---------
 
 def enviar_token_por_api_web(destinatario, token):
-    """Prepara y despacha el correo corporativo con el token OTP dinámico."""
+    """
+    Prepara y despacha el correo corporativo con el token OTP dinámico.
+    Utiliza el motor SMTP validado en la Parte 1.
+    """
     asunto = f"🔑 Código de Verificación DaDiMAC: {token}"
     cuerpo_html = f"""
     <h2>Verificación de Identidad - DaDiMAC</h2>
-    <p>Estás intentando registrarte en la plataforma corporativa. Tu código de verificación es:</p>
+    <p>Estás intentando registrarte en la plataforma corporativa. Tu código de verificación de un solo uso es:</p>
     <h1 style='color:#2678FE; letter-spacing: 4px;'>{token}</h1>
-    <p>Introduce este código en la barra lateral del sistema para procesar tu alta.</p>
+    <p>Introduce este código en la barra lateral del sistema para poder procesar tu alta en la base de datos.</p>
     """
     return enviar_correo_smtp(destinatario, asunto, cuerpo_html)
 
@@ -132,7 +135,7 @@ def registrar_usuario_firebase(email, password):
             # Se fuerza el re-impacto de bloqueo preventivo gerencial
             respuesta_disable = requests.post(URL_UPDATE_USER, json=payload_disable, headers=HEADERS_JSON)
             
-            # Si el endpoint de actualización nos devuelve USER_DISABLED o éxito, la operación es CORRECTA
+            # Si el endpoint de actualización devuelve USER_DISABLED o éxito, el flujo es correcto
             if "USER_DISABLED" in respuesta_disable.text or respuesta_disable.status_code == 200:
                 return True, "🎉 Registro procesado en la nube en estado retenido."
             
@@ -142,7 +145,7 @@ def registrar_usuario_firebase(email, password):
             datos = respuesta_signup.json()
             error_msg = datos.get("error", {}).get("message", "Error al registrar")
             
-            # INTERCEPCIÓN EN CALIENTE: Si la API de creación responde directamente que nació bloqueado
+            # Intercepción si la API de creación responde directamente que nació bloqueado
             if "USER_DISABLED" in error_msg or "ADMIN_DISABLED" in error_msg:
                 return True, "🎉 Registro procesado en la nube en estado retenido."
                 
@@ -158,11 +161,8 @@ def registrar_usuario_firebase(email, password):
         return False, f"❌ Error de red con los servidores de Firebase: {error_str}"
 
 
-def validar_usuario_(email, password):
-    """
-    Valida el inicio de sesión. Si las credenciales son válidas pero la cuenta 
-    está deshabilitada, se intercepta y se evalúa como una condición EXITOSA.
-    """
+def validar_usuario_firebase(email, password):
+    """Valida el inicio de sesión e interpreta los bloqueos manuales o automáticos de tu consola"""
     payload = {
         "email": email.strip().lower(),
         "password": password,
@@ -170,26 +170,20 @@ def validar_usuario_(email, password):
     }
     try:
         respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
-        
-        # Caso A: El usuario ya está habilitado por la gerencia en la consola
         if respuesta.status_code == 200:
             datos = respuesta.json()
             email_autenticado = datos.get("email").strip().lower()
-            return True, {"status": "HABILITADO", "email": email_autenticado}
-            
+            return True, email_autenticado
         else:
             datos = respuesta.json()
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
-            # ADAPTACIÓN CRÍTICA: Captura el código de bloqueo y lo procesa como una validación EXITOSA
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
-                return True, {"status": "RETENIDO", "email": email.strip().lower()}
+                return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
             
-            # Errores de credenciales reales
             if error_code in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
                 error_code = "Credenciales incorrectas o inválidas."
             return False, f"⚠️ {error_code}"
-            
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
 
