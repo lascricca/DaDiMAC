@@ -80,79 +80,70 @@ def inicializar_sesion():
 #---------
 
 def enviar_token_por_api_web(destinatario, token):
-    """
-    Prepara y despacha el correo corporativo con el token OTP dinámico.
-    Utiliza el motor SMTP validado en la Parte 1.
-    """
+    """Prepara y despacha el correo corporativo con el token OTP dinámico."""
     asunto = f"🔑 Código de Verificación DaDiMAC: {token}"
     cuerpo_html = f"""
     <h2>Verificación de Identidad - DaDiMAC</h2>
-    <p>Estás intentando registrarte en la plataforma corporativa. Tu código de verificación de un solo uso es:</p>
+    <p>Estás intentando registrarte en la plataforma corporativa. Tu código de verificación es:</p>
     <h1 style='color:#2678FE; letter-spacing: 4px;'>{token}</h1>
-    <p>Introduce este código en la barra lateral del sistema para poder procesar tu alta en la base de datos.</p>
+    <p>Introduce este código en la barra lateral del sistema para procesar tu alta.</p>
     """
     return enviar_correo_smtp(destinatario, asunto, cuerpo_html)
 
 
 def registrar_usuario_firebase(email, password):
     """
-    Inscribe al operador contable en Firebase Auth posterior a la verificación OTP
-    e inmediatamente fuerza la inhabilitación de la cuenta enviando el localId y el idToken.
+    Utiliza el SDK de administración sugerido para crear al usuario 
+    directamente en estado DESHABILITADO de nacimiento, blindando la seguridad.
     """
-    payload_signup = {"email": email, "password": password, "returnSecureToken": True}
     try:
-        # Paso 1: Crear el usuario usando tu URL oficial de la Parte 1
-        respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
+        user = auth.create_user(
+            email=email.strip().lower(),
+            email_verified=False,
+            password=password,
+            disabled=True  # Nace retenido por la gerencia
+        )
+        return True, "🎉 Registro procesado en la nube en estado retenido."
         
-        if respuesta_signup.status_code == 200:
-            datos_signup = respuesta_signup.json()
-            id_token = datos_signup.get("idToken")
-            uid_usuario = datos_signup.get("localId")  # Capturamos el UID físico asignado por Google
-            
-            # Paso 2: Estructura corregida para forzar la inhabilitación administrativa inmediata
-            payload_disable = {
-                "idToken": id_token,
-                "localId": uid_usuario,  # SE INCLUYE EL UID OBLIGATORIO PARA IDENTIFICAR LA CUENTA A MODIFICAR
-                "disableUser": True
-            }
-            
-            # Se ejecuta el impacto formal en el endpoint oficial de Identity Toolkit
-            requests.post(URL_UPDATE_USER, json=payload_disable, headers=HEADERS_JSON)
-            
-            return True, "🎉 Registro procesado en la nube en estado retenido."
-        else:
-            datos = respuesta_signup.json()
-            error_msg = datos.get("error", {}).get("message", "Error al registrar")
-            if error_msg == "EMAIL_EXISTS":
-                error_msg = "Este correo electrónico ya está registrado."
-            return False, f"⚠️ {error_msg}"
+    except auth.EmailAlreadyExistsError:
+        return False, "⚠️ Este correo electrónico ya está registrado."
     except Exception as e:
-        return False, f"❌ Error de red con los servidores de Firebase: {str(e)}"
+        error_msg = str(e).split(":")[-1].strip() if ":" in str(e) else str(e)
+        return False, f"❌ Error administrativo de Firebase: {error_msg}"
 
 
 def validar_usuario_firebase(email, password):
-    """Valida el inicio de sesión utilizando exclusivamente la URL oficial de autenticación"""
+    """
+    Valida el inicio de sesión. Si las credenciales son válidas pero la cuenta 
+    está deshabilitada, se intercepta y se evalúa como una condición EXITOSA.
+    """
     payload = {
-        "email": email,
+        "email": email.strip().lower(),
         "password": password,
         "returnSecureToken": True
     }
     try:
         respuesta = requests.post(URL_SIGN_IN, json=payload, headers=HEADERS_JSON)
+        
+        # Caso A: El usuario ya está habilitado por la gerencia en la consola
         if respuesta.status_code == 200:
             datos = respuesta.json()
             email_autenticado = datos.get("email").strip().lower()
-            return True, email_autenticado
+            return True, {"status": "HABILITADO", "email": email_autenticado}
+            
         else:
             datos = respuesta.json()
             error_code = datos.get("error", {}).get("message", "Error de acceso")
             
+            # ADAPTACIÓN CRÍTICA: Captura el código de bloqueo y lo procesa como una validación EXITOSA
             if error_code in ["USER_DISABLED", "ADMIN_DISABLED"]:
-                return False, "🔒 Acceso Retenido: Tu cuenta está registrada en Firebase, pero requiere la activación manual de la Gerencia. Se te notificará por tu correo electrónico una vez otorgada la autorización."
+                return True, {"status": "RETENIDO", "email": email.strip().lower()}
             
+            # Errores de credenciales reales
             if error_code in ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"]:
                 error_code = "Credenciales incorrectas o inválidas."
             return False, f"⚠️ {error_code}"
+            
     except Exception as e:
         return False, f"❌ Error de red: {str(e)}"
 
