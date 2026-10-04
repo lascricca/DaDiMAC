@@ -107,33 +107,44 @@ def enviar_token_por_api_web(destinatario, token):
 
 def registrar_usuario_firebase(email, password):
     """
-    Utiliza el SDK de administración sugerido para crear al usuario 
-    directamente en estado DESHABILITADO, garantizando la inicialización del SDK.
+    Inscribe al operador contable en Firebase Auth posterior a la verificación OTP
+    e inmediatamente aplica la retención forzando el estado deshabilitado por API REST.
     """
-    import firebase_admin
-    from firebase_admin import credentials, auth
-    
+    # Intentamos inyectar el estado deshabilitado desde el nacimiento mediante la API de Google Identity
+    payload_signup = {
+        "email": email.strip().lower(), 
+        "password": password, 
+        "returnSecureToken": True,
+        "disabled": True  # Condición nativa para el motor REST de Identity Toolkit
+    }
     try:
-        # BLINDAJE DE SEGURIDAD: Si la app no existe en este hilo de Streamlit, la inicializamos en el acto
-        if not firebase_admin._apps:
-            credenciales_dict = dict(st.secrets["firebase"])
-            cred = credentials.Certificate(credenciales_dict)
-            firebase_admin.initialize_app(cred)
-            
-        # Ejecución segura del alta en estado retenido
-        user = auth.create_user(
-            email=email.strip().lower(),
-            email_verified=False,
-            password=password,
-            disabled=True  # Nace retenido por la gerencia
-        )
-        return True, "🎉 Registro procesado en la nube en estado retenido."
+        # Ejecutamos el registro oficial usando la URL oficial configurada en la Parte 1
+        respuesta_signup = requests.post(URL_SIGN_UP, json=payload_signup, headers=HEADERS_JSON)
         
-    except auth.EmailAlreadyExistsError:
-        return False, "⚠️ Este correo electrónico ya está registrado."
+        if respuesta_signup.status_code == 200:
+            datos_signup = respuesta_signup.json()
+            id_token = datos_signup.get("idToken")
+            uid_usuario = datos_signup.get("localId")
+            
+            # CONTROL DE SEGURIDAD SECUENCIAL: Forzamos un re-impacto de bloqueo para blindar el estado retenido
+            payload_disable = {
+                "idToken": id_token,
+                "localId": uid_usuario,
+                "disableUser": True
+            }
+            requests.post(URL_UPDATE_USER, json=payload_disable, headers=HEADERS_JSON)
+            
+            return True, "🎉 Registro procesado en la nube en estado retenido."
+        else:
+            datos = respuesta_signup.json()
+            error_msg = datos.get("error", {}).get("message", "Error al registrar")
+            if error_msg == "EMAIL_EXISTS":
+                return False, "⚠️ Este correo electrónico ya está registrado."
+            return False, f"⚠️ {error_msg}"
+            
     except Exception as e:
-        error_msg = str(e).split(":")[-1].strip() if ":" in str(e) else str(e)
-        return False, f"❌ Error administrativo de Firebase: {error_msg}"
+        return False, f"❌ Error de red con los servidores de Firebase: {str(e)}"
+
 
 def validar_usuario_(email, password):
     """
