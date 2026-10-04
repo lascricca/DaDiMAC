@@ -5,6 +5,9 @@ import requests
 import streamlit as st
 import random
 import smtplib
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import auth  # CORRECCIÓN MAESTRA: Importación explícita para eliminar el NameError
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -91,7 +94,7 @@ def enviar_token_por_api_web(destinatario, token):
     return enviar_correo_smtp(destinatario, asunto, cuerpo_html)
 
 
-def registrar_usuario_firebase(email, password):
+def registrar_usuario_(email, password):
     """
     Utiliza el SDK de administración sugerido para crear al usuario 
     directamente en estado DESHABILITADO de nacimiento, blindando la seguridad.
@@ -109,10 +112,10 @@ def registrar_usuario_firebase(email, password):
         return False, "⚠️ Este correo electrónico ya está registrado."
     except Exception as e:
         error_msg = str(e).split(":")[-1].strip() if ":" in str(e) else str(e)
-        return False, f"❌ Error administrativo de Firebase: {error_msg}"
+        return False, f"❌ Error administrativo de : {error_msg}"
 
 
-def validar_usuario_firebase(email, password):
+def validar_usuario_(email, password):
     """
     Valida el inicio de sesión. Si las credenciales son válidas pero la cuenta 
     está deshabilitada, se intercepta y se evalúa como una condición EXITOSA.
@@ -152,13 +155,13 @@ def validar_usuario_firebase(email, password):
 #--------
 
 def login_sidebar():
-    """Despliega la pasarela de control de identidad con verificación estricta de Token previo a Firebase"""
+    """Despliega la pasarela de control de identidad con verificación estricta de Token previo a """
     # Inicialización forzada inmediata de variables de control
     inicializar_sesion()
     
     if not st.session_state.get("autenticado", False):
         if st.session_state.get("pantalla_actual", "login") == "login":
-            st.sidebar.header("🔐 Acceso DaDiMAC (Firebase Cloud)")
+            st.sidebar.header("🔐 Acceso DaDiMAC ( Cloud)")
             email = st.sidebar.text_input("Correo electrónico:", key="auth_email").strip().lower()
             password = st.sidebar.text_input("Contraseña:", type="password", key="auth_pass")
             
@@ -166,7 +169,7 @@ def login_sidebar():
             with col_btn1:
                 if st.sidebar.button("🔓 Entrar"):
                     if email and password:
-                        exito, email_retornado = validar_usuario_firebase(email, password)
+                        exito, email_retornado = validar_usuario_(email, password)
                         if exito:
                             st.session_state.autenticado = True
                             st.session_state.usuario_email = email_retornado
@@ -191,7 +194,7 @@ def login_sidebar():
             nuevo_email = st.sidebar.text_input("Correo corporativo:", key="reg_email").strip().lower()
             nueva_pass = st.sidebar.text_input("Asigna una Contraseña (mín. 6 caracteres):", type="password", key="reg_pass")
             
-            # Verificación del Token ANTES de registrar en Firebase
+            # Verificación del Token ANTES de registrar en 
             if st.session_state.get("token_registro") is not None:
                 st.sidebar.warning("🔑 Introduce el token enviado a tu casilla para confirmar la operación:")
                 token_ingresado = st.sidebar.text_input("Token de 6 dígitos:", key="reg_token_input").strip()
@@ -221,14 +224,14 @@ def login_sidebar():
                             </ul>
                             <p>El sistema procederá a inscribirlo en estado retenido. Recuerde habilitarlo manualmente en la consola Auth.</p>
                             """
-                            # Despachamos a tu bandeja máster antes de tocar los servidores de Firebase
+                            # Despachamos a tu bandeja máster antes de tocar los servidores de 
                             enviar_correo_smtp(CORREO_MASTER, asunto_master, cuerpo_master)
                             
-                            # 2. PASO CRÍTICO: Creación física en Firebase en estado deshabilitado (Nativo SDK)
-                            exito, msg = registrar_usuario_firebase(email_final, pass_final)
+                            # 2. PASO CRÍTICO: Creación física en  en estado deshabilitado (Nativo SDK)
+                            exito, msg = registrar_usuario_(email_final, pass_final)
                             
                             if exito:
-                                st.sidebar.success("🎉 ¡Correo verificado e inscrito en Firebase!")
+                                st.sidebar.success("🎉 ¡Correo verificado e inscrito en !")
                                 st.sidebar.info("📩 Tu acceso se encuentra retenido por seguridad. Debes esperar a que la gerencia verifique la alerta de registro en la consola para habilitarte.")
                                 
                                 st.session_state.token_registro = None
@@ -244,7 +247,7 @@ def login_sidebar():
                         st.session_state.datos_pendientes = None
                         st.rerun()
             else:
-                # Flujo inicial: Solicitar el Token sin crear nada en Firebase
+                # Flujo inicial: Solicitar el Token sin crear nada en 
                 if st.sidebar.button("📧 Solicitar Token de Verificación"):
                     if nuevo_email and len(nueva_pass) >= 6:
                         token_generado = random.randint(100000, 999999)
@@ -284,7 +287,7 @@ def login_sidebar():
         return False
     else:
         st.sidebar.success(f"👤 Sesión Activa\n{st.session_state.get('usuario_email')}")
-        st.sidebar.caption("🔒 Autenticación en la Nube vía Firebase")
+        st.sidebar.caption("🔒 Autenticación en la Nube vía ")
         if st.sidebar.button("🔒 Cerrar Sesión"):
             st.session_state.autenticado = False
             st.session_state.usuario_email = None
