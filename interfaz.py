@@ -247,8 +247,8 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     # else:
     #     st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
 
-    # =====================================================================
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (BLOQUEO NATIVO STREAMLIT)
+     # =====================================================================
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (BLOQUEO NATIVO INTEGRADO)
     # =====================================================================
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
@@ -261,14 +261,23 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         if 'Monto' in df_tabla_interactiva.columns:
             df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
         
-        # 🚨 CONFIGURACIÓN MAESTRA NATIVA: Apaga por completo la barra de descargar y buscar interna
+        # 🚨 CONFIGURACIÓN NATIVA INTEGRAL: Desactiva la barra de herramientas sin colisionar con TypeError
         st.dataframe(
             df_tabla_interactiva, 
             use_container_width=True, 
             hide_index=True,
-            on_select="ignore",
-            configuration={"show_toolbar": False}  # <--- ESTA INSTRUCCIÓN APAGA EL DOWNLOAD PARA SIEMPRE
+            on_select="ignore"
         )
-        #st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
+        
+        # Inyección de estilo perimetral de un solo elemento para asegurar que no se reactive con filtros
+        st.markdown("""
+            <style>
+            [data-testid="stElementToolbar"] {
+                display: none !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
+
