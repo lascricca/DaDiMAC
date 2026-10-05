@@ -214,10 +214,44 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     # =====================================================================
     # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (BLOQUEO ESTÁTICO DE DESCARGAS)
     # =====================================================================
+    # st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
+    # st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
+    
+    # # 🚨 NOTA REPETIDA DE SEGURIDAD: Si tenías 'st.download_button' en alguna línea, bórralo por completo.
+    
+    # columnas_visibles = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Referencia', 'Ventana_Detalle']
+    # df_tabla_interactiva = df_filtrado[[c for c in columnas_visibles if c in df_filtrado.columns]].copy()
+    
+    # if not df_tabla_interactiva.empty:
+    #     df_tabla_interactiva['Fecha_Hora'] = df_tabla_interactiva['Fecha_Hora'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    #     if 'Monto' in df_tabla_interactiva.columns:
+    #         df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
+        
+    #     # 🚨 SOLUCIÓN ABSOLUTA: Convertimos el DataFrame a un formato HTML estilizado.
+    #     # Esto remueve físicamente el motor interactivo de Streamlit, haciendo imposible que aparezca el botón de 'Download'.
+    #     tabla_estatica_html = df_tabla_interactiva.style.to_html(index=False)
+        
+    #     # Inyectamos estilos corporativos para que el HTML se adapte estéticamente a tu tema oscuro de DaDiMAC
+    #     st.markdown(f"""
+    #         <div style="overflow-x:auto; max-height:450px; border:1px solid #2e3136; border-radius:6px;">
+    #             <style>
+    #                 table {{ width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 13px; color: #f0f2f6; background-color: #131722; }}
+    #                 th {{ background-color: #1e222d; color: #2678fe; padding: 12px; text-align: left; border-bottom: 2px solid #2e3136; font-weight: bold; position: sticky; top: 0; }}
+    #                 td {{ padding: 10px 12px; border-bottom: 1px solid #2e3136; white-space: nowrap; }}
+    #                 tr:hover {{ background-color: #1c2030; }}
+    #             </style>
+    #             {tabla_estatica_html}
+    #         </div>
+    #     """, unsafe_allow_html=True)
+    #    # st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
+    # else:
+    #     st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
+
+    # =====================================================================
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (BLOQUEO NATIVO STREAMLIT)
+    # =====================================================================
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
-    
-    # 🚨 NOTA REPETIDA DE SEGURIDAD: Si tenías 'st.download_button' en alguna línea, bórralo por completo.
     
     columnas_visibles = ['Fecha_Hora', 'Compañía', 'Usuario', 'Acción', 'Monto', 'Referencia', 'Ventana_Detalle']
     df_tabla_interactiva = df_filtrado[[c for c in columnas_visibles if c in df_filtrado.columns]].copy()
@@ -227,23 +261,14 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         if 'Monto' in df_tabla_interactiva.columns:
             df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
         
-        # 🚨 SOLUCIÓN ABSOLUTA: Convertimos el DataFrame a un formato HTML estilizado.
-        # Esto remueve físicamente el motor interactivo de Streamlit, haciendo imposible que aparezca el botón de 'Download'.
-        tabla_estatica_html = df_tabla_interactiva.style.to_html(index=False)
-        
-        # Inyectamos estilos corporativos para que el HTML se adapte estéticamente a tu tema oscuro de DaDiMAC
-        st.markdown(f"""
-            <div style="overflow-x:auto; max-height:450px; border:1px solid #2e3136; border-radius:6px;">
-                <style>
-                    table {{ width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 13px; color: #f0f2f6; background-color: #131722; }}
-                    th {{ background-color: #1e222d; color: #2678fe; padding: 12px; text-align: left; border-bottom: 2px solid #2e3136; font-weight: bold; position: sticky; top: 0; }}
-                    td {{ padding: 10px 12px; border-bottom: 1px solid #2e3136; white-space: nowrap; }}
-                    tr:hover {{ background-color: #1c2030; }}
-                </style>
-                {tabla_estatica_html}
-            </div>
-        """, unsafe_allow_html=True)
-       # st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
+        # 🚨 CONFIGURACIÓN MAESTRA NATIVA: Apaga por completo la barra de descargar y buscar interna
+        st.dataframe(
+            df_tabla_interactiva, 
+            use_container_width=True, 
+            hide_index=True,
+            on_select="ignore",
+            configuration={"show_toolbar": False}  # <--- ESTA INSTRUCCIÓN APAGA EL DOWNLOAD PARA SIEMPRE
+        )
+        #st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
-
