@@ -243,7 +243,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
                 {tabla_estatica_html}
             </div>
         """, unsafe_allow_html=True)
-        st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
+       # st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
 
