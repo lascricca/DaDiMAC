@@ -178,7 +178,7 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     st.markdown("---")
 
     # =====================================================================
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (CON REFERENCIA REINTEGRADA)
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (BLOQUEO DE DESCARGAS)
     # =====================================================================
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
@@ -191,6 +191,23 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
         df_tabla_interactiva['Fecha_Hora'] = df_tabla_interactiva['Fecha_Hora'].dt.strftime('%Y-%m-%d %H:%M:%S')
         if 'Monto' in df_tabla_interactiva.columns:
             df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
-        st.dataframe(df_tabla_interactiva, use_container_width=True, hide_index=True)
+        
+        # Dibujamos la tabla sin permitir interacción de selección masiva
+        st.dataframe(
+            df_tabla_interactiva, 
+            use_container_width=True, 
+            hide_index=True,
+            on_select="ignore"
+        )
+
+        # 🚨 INYECCIÓN CSS: Oculta los íconos flotantes de descarga integrados de Streamlit (el ojo, la flecha de descarga y expandir)
+        st.markdown("""
+            <style>
+            [data-testid="stElementToolbar"] {
+                display: none !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
     else:
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
+
