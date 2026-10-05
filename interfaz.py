@@ -247,8 +247,8 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     # else:
     #     st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
 
-     # =====================================================================
-    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (BLOQUEO NATIVO INTEGRADO)
+    # =====================================================================
+    # 6. TABLA INTERACTIVA DE DATOS DE AUDITORÍA (ORDENAMIENTO NUMÉRICO)
     # =====================================================================
     st.subheader("🔍 Auditor de Registros Detallados (Data In-Depth)")
     st.markdown("Usa la barra superior de la tabla para buscar términos, ordenar columnas o expandir transacciones:")
@@ -257,19 +257,28 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
     df_tabla_interactiva = df_filtrado[[c for c in columnas_visibles if c in df_filtrado.columns]].copy()
     
     if not df_tabla_interactiva.empty:
+        # Aseguramos que la columna Fecha_Hora sea texto para su correcta visualización
         df_tabla_interactiva['Fecha_Hora'] = df_tabla_interactiva['Fecha_Hora'].dt.strftime('%Y-%m-%d %H:%M:%S')
-        if 'Monto' in df_tabla_interactiva.columns:
-            df_tabla_interactiva['Monto'] = df_tabla_interactiva['Monto'].map(lambda x: f"${x:,.2f}")
         
-        # 🚨 CONFIGURACIÓN NATIVA INTEGRAL: Desactiva la barra de herramientas sin colisionar con TypeError
+        # 🚨 CORRECCIÓN MAESTRA: Forzamos a que Monto mantenga su naturaleza numérica pura
+        if 'Monto' in df_tabla_interactiva.columns:
+            df_tabla_interactiva['Monto'] = pd.to_numeric(df_tabla_interactiva['Monto'], errors='coerce').fillna(0.0)
+        
+        # Enviamos el DataFrame numérico y aplicamos la máscara visual nativa de Streamlit
         st.dataframe(
             df_tabla_interactiva, 
             use_container_width=True, 
             hide_index=True,
-            on_select="ignore"
+            on_select="ignore",
+            column_config={
+                "Monto": st.column_config.NumberColumn(
+                    label="Monto",
+                    format="$%,.2f"  # <--- FORMATEO VISUAL: Mantiene el número de fondo para el ordenamiento
+                )
+            }
         )
         
-        # Inyección de estilo perimetral de un solo elemento para asegurar que no se reactive con filtros
+        # Inyección de estilo perimetral estricto para mantener apagada la barra de descargas
         st.markdown("""
             <style>
             [data-testid="stElementToolbar"] {
@@ -277,7 +286,9 @@ def renderizar_dashboard(df_filtrado, fecha_inicio, fecha_fin, df_csv_origen=Non
             }
             </style>
         """, unsafe_allow_html=True)
-       # st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
+        #st.caption("🔒 Seguridad Perimetral: La extracción masiva y descarga de este set de datos está restringida por la Gerencia.")
     else:
+        st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
+
         st.info("ℹ️ No hay registros detallados disponibles para mostrar.")
 
