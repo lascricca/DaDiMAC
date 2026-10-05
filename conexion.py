@@ -109,12 +109,14 @@ def cargar_datos_vivos_consolidados():
         
             # 3. Diccionario maestro con los códigos numéricos oficiales de Sage Peachtree
             mapa_numerico_sage = {
-                0: 'Agregó',
-                1: 'Modificó',
-                2: 'Eliminó',
-                '0': 'Agregó',
-                '1': 'Modificó',
-                '2': 'Eliminó'
+                0: 'Consulta',
+                1: 'Agrega',
+                2: 'Modifica',
+                3: 'Elimina',
+                '0': 'Consulta',
+                '1': 'Agrega',
+                '2': 'Modifica',
+                '3': 'Elimina'
             }
         
             # 4. Sustitución de los números por sus respectivos literales contables
